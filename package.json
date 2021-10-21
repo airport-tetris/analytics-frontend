@@ -13,7 +13,7 @@
   "scripts": {
     "prepare": "node server/prepare-data.js",
     "build": "ember build --environment=production",
-    "build-docs": "ember build --environment=docs",
+    "build-docs": "ember build --environment=docs --output-path docs",
     "lint": "npm-run-all --aggregate-output --continue-on-error --parallel 'lint:!(fix)'",
     "lint:fix": "npm-run-all --aggregate-output --continue-on-error --parallel lint:*:fix",
     "lint:hbs": "ember-template-lint .",
