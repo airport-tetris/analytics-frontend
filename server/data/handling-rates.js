@@ -1,0 +1,1 @@
+module.exports = [{"Name":"Bus_Cost_per_Minute","Value":"10"},{"Name":"Away_Aircraft_Stand_Cost_per_Minute","Value":"20"},{"Name":"JetBridge_Aircraft_Stand_Cost_per_Minute","Value":"25"},{"Name":"Aircraft_Taxiing_Cost_per_Minute","Value":"30"}]

@@ -1,0 +1,1 @@
+module.exports = [{"Aircraft_Class":"Regional","JetBridge_Handling_Time":"40","Away_Handling_Time":"50"},{"Aircraft_Class":"Narrow_Body","JetBridge_Handling_Time":"50","Away_Handling_Time":"65"},{"Aircraft_Class":"Wide_Body","JetBridge_Handling_Time":"60","Away_Handling_Time":"80"}]

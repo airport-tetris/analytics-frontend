@@ -47,5 +47,10 @@ module.exports = function (environment) {
     // here you can enable a production-specific feature
   }
 
+  if (environment === 'docs') {
+    ENV.locationType = 'hash';
+    ENV.rootURL = '/analytics-frontend';
+  }
+
   return ENV;
 };

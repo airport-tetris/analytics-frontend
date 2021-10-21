@@ -1,0 +1,1 @@
+module.exports = [{"Aircraft_Class":"Regional","Max_Seats":"120"},{"Aircraft_Class":"Narrow_Body","Max_Seats":"220"},{"Aircraft_Class":"Wide_Body","Max_Seats":"1000"}]

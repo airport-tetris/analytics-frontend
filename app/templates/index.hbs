@@ -1,0 +1,52 @@
+{{page-title 'Index'}}
+<div class="container">
+  <h3>
+    Timetable length
+    {{@model.length}}
+  </h3>
+  <div class="row">
+    <div class="col-12">
+      <h3>
+        Timetables
+      </h3>
+      <BsForm
+        @formLayout="vertical"
+        @model={{this}}
+        @onSubmit={{this.parseTimetable}} as |form|
+      >
+        <form.element
+          @controlType="textarea"
+          @label="Textarea"
+          @property="timetableCSV"
+        />
+        <form.submitButton>
+          Parse timetable CSV
+        </form.submitButton>
+      </BsForm>
+      <D3::TimetableChart
+        @data={{take 1000 this.data}}
+        @width={{960}}
+        @aspectRatio={{0.6}}
+      />
+    </div>
+    <div class="col-12">
+      <ModelsTable
+        @data={{this.data}}
+        @columns={{this.columns}}
+        @showComponentFooter={{this.showComponentFooter}}
+        @showColumnsDropdown={{this.showColumnsDropdown}}
+        @useFilteringByColumns={{this.useFilteringByColumns}}
+        @showGlobalFilter={{this.showGlobalFilter}}
+        @doFilteringByHiddenColumns={{this.doFilteringByHiddenColumns}}
+        @useNumericPagination={{this.useNumericPagination}}
+        @filteringIgnoreCase={{this.filteringIgnoreCase}}
+        @multipleColumnsSorting={{this.multipleColumnsSorting}}
+        @showCurrentPageNumberSelect={{this.showCurrentPageNumberSelect}}
+        @collapseNumPaginationForPagesCount={{this.collapseNumPaginationForPagesCount
+        }}
+        @showPageSize={{this.showPageSize}}
+      />
+    </div>
+  </div>
+</div>
+{{outlet}}

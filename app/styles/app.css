@@ -1,0 +1,54 @@
+.time-line-element- {
+  stroke: black;
+  stroke-width: 2;
+}
+.time-line-dot- {
+  stroke: black;
+  fill: black;
+}
+
+
+.time-line-element-1 {
+  stroke-width: 2;
+  stroke: green;
+}
+.time-line-dot-1 {
+  stroke: green;
+  fill: green;
+}
+
+.time-line-element-2 {
+  stroke-width: 2;
+  stroke: red;
+}
+.time-line-dot-2 {
+  stroke: red;
+  fill: red;
+}
+
+.time-line-element-3 {
+  stroke-width: 2;
+  stroke: orange;
+}
+.time-line-dot-3 {
+  stroke: orange;
+  fill: orange;
+}
+
+.time-line-element-4 {
+  stroke-width: 2;
+  stroke: deeppink;
+}
+.time-line-dot-4 {
+  stroke: deeppink;
+  fill: deeppink;
+}
+
+.time-line-element-5 {
+  stroke-width: 2;
+  stroke: darkblue;
+}
+.time-line-dot-5 {
+  stroke: darkblue;
+  fill: darkblue;
+}
