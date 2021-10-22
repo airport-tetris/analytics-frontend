@@ -147,19 +147,19 @@ export default class IndexController extends Controller {
     }
   }
 
-  get incorrectData() {
+  @tracked
+  incorrectLines = [];
+
+  get stands() {
     let stands = {};
-    const incorrectLines = [];
+    // const incorrectLines = [];
     if (!this.data) {
-      return incorrectLines;
+      return [];
     }
     this.data.forEach((line, idx) => {
       const standId = line.standId;
       if (typeof standId === 'undefined') {
-        incorrectLines.push({
-          line,
-          error: 'Undefined stand',
-        }); // no stand
+        console.warn(`Undefined stand for line ${line}`);
       } else {
         if (typeof stands[standId] === 'undefined') {
           stands[standId] = [];
@@ -167,34 +167,30 @@ export default class IndexController extends Controller {
         stands[standId].push(idx);
       }
     });
-
-    const linesIntersection = Object.keys(stands)
-      .map((key) => {
-        // let result = false;
-        // let incorrectLines = [];
-        let standLineIds = stands[key].sort((a, b) => {
-          moment(this.data[b].start) > moment(this.data[a].start);
-        });
-        standLineIds = standLineIds.filter((id, i) => {
-          if (i === 0) return false;
-          const prevId = standLineIds[i - 1];
-          return moment(this.data[id].start) < moment(this.data[prevId].end);
-        });
-        return standLineIds.map((id) => {
+    const standStructure = Object.keys(stands).map((key) => {
+      // let result = false;
+      // let incorrectLines = [];
+      let standLineIds = stands[key].sort((a, b) => {
+        moment(this.data[b].start) > moment(this.data[a].start);
+      });
+      return {
+        standId: key,
+        lines: standLineIds.map((id) => {
           return this.data[id];
-        });
-      })
-      .filter((lines) => {
-        return lines.length > 0;
-      });
+        }),
+      };
+    });
+    return standStructure;
+  }
 
-    linesIntersection.forEach((standIncorrectLines) => {
-      standIncorrectLines.forEach((line) => {
-        incorrectLines.push({
-          line,
-          error: `Stand ${line.standId} line time ${line.time} starts before prev flight finish`,
-        });
+  get incorrectData() {
+    const stands = this.stands;
+    const incorrectLines = stands.filter((stand) => {
+      const intersectedLines = stand.lines.filter((line, i) => {
+        if (i === 0) return false;
+        return moment(line.start) < moment(stand.lines[i - 1].end);
       });
+      return intersectedLines.length > 0;
     });
     return incorrectLines;
   }

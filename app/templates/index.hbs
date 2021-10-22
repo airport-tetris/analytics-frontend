@@ -31,17 +31,34 @@
           Number of errors
           {{this.incorrectData.length}}
         </div>
-        {{#each (take 30 this.incorrectData) as |lineError|}}
+        {{#each (take 200 this.incorrectData) as |incorrectStand|}}
           <div class="col-3">
-            {{lineError.error}}
+            {{incorrectStand.standId}}
           </div>
-          <div class="col-9">
-            start
-            {{lineError.line.start}}
-            finish
-            {{lineError.line.end}}
-            stand
-            {{lineError.line.standId}}
+          <div class="col-4">
+            {{#each incorrectStand.lines as |intersectedLine|}}
+              <div class="row">
+                <div class="col-6">
+                  {{intersectedLine.start}}
+                </div>
+                <div class="col-6">
+                  {{intersectedLine.end}}
+                </div>
+              </div>
+            {{/each}}
+          </div>
+          <div class="col-5">
+            <D3::TimetableChart
+              @data={{incorrectStand.lines}}
+              @width={{260}}
+              @chartOptions={{hash
+                minY=''
+                maxY=''
+                minX=(get (get (get incorrectStand 'lines') 0) 'start')
+                maxX=(get (get (reverse (get incorrectStand 'lines')) 0) 'end')
+              }}
+              @aspectRatio={{0.6}}
+            />
           </div>
         {{/each}}
       </div>
