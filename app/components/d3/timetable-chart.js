@@ -39,21 +39,50 @@ export default class D3TimetableChartComponent extends Component {
     left: 25,
   };
 
+  // get minY() {
+  //   const data = this.chartData.map((val) => { return val.y });
+  //   return this.args.chartOptions.minX || min(data);
+  // }
+  get minX() {
+    const option = this.args.chartOptions.minX;
+    const momentObj = moment(option);
+    return momentObj.isValid() ? momentObj : moment('2019-05-17 00:00:00',"YYYY-MM-DD hh:mm:ss");
+  }
+
+  get maxX() {
+    const option = this.args.chartOptions.maxX;
+    const momentObj = moment(option);
+    return momentObj.isValid() ? momentObj : moment('2019-05-17 23:59:59', "YYYY-MM-DD hh:mm:ss");
+  }
+
+  get minY() {
+    const option = this.args.chartOptions.minY;
+    if (option === '' || Number.isNaN(Number(option))) {
+      const data = this.chartData.map((val) => { return val.y });
+      return min(data);
+    } else {
+      return Number(option);
+    }
+  }
+
+  get maxY() {
+    const option = this.args.chartOptions.maxY;
+    if (option === '' || Number.isNaN(Number(option))) {
+      const data = this.chartData.map((val) => { return val.y });
+      return max(data);
+    } else {
+      return Number(option);
+    }
+  }
+
   get xScale() {
-    const firstDate = moment('Fri May 17 2019 00:00:00');
-    const lastDate = moment('Fri May 17 2019 23:59:59');
     const width = this.width - this.margin.right - this.margin.left;
-    return scaleTime()
-      .range([0, width])
-      .domain([moment(firstDate), moment(lastDate)]);
+    return scaleTime().range([0, width]).domain([this.minX, this.maxX]);
   }
 
   get yScale() {
     const height = this.height - this.margin.top - this.margin.bottom;
-    const data = this.chartData.map((val) => { return val.y });
-    const minV = min(data);
-    const maxV = max(data);
-    return scaleLinear().range([height, 0]).domain([minV, maxV]);
+    return scaleLinear().range([height, 0]).domain([this.minY, this.maxY]);
   }
 
   get chartData() {
@@ -91,9 +120,42 @@ export default class D3TimetableChartComponent extends Component {
       yScale,
     } = this;
 
-    const gMarg = select(`svg#${svgId} .margin-group`);
-    gMarg.selectAll('line').remove();
-    gMarg.selectAll('circle').remove();
+    // const gMarg = select(`svg#${svgId} .margin-group`);
+    // gMarg.remove();
+    // gMarg.selectAll('line').remove();
+    // gMarg.selectAll('circle').remove();
+
+    const svg = select(`svg#${svgId}`);
+
+    svg.select('.margin-group').remove();
+    svg.select('#axis--x').remove();
+    svg.select('#axis--y').remove();
+
+    const gMarg = svg
+      .append('g')
+      .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
+      .attr('class', 'margin-group');
+
+    let xAxis = axisBottom(xScale).ticks(6).tickSize(4, 1);
+
+    let yAxis = axisLeft(yScale).ticks(5).tickSize(4, 1);
+
+    svg
+      .append('g')
+      .attr(
+        'transform',
+        'translate(' + margin.left + ',' + (height - margin.bottom) + ')'
+      )
+      .attr('class', 'x axis')
+      .attr('id', 'axis--x')
+      .call(xAxis);
+
+    svg
+      .append('g')
+      .attr('class', 'y axis')
+      .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
+      .attr('id', 'axis--y')
+      .call(yAxis);
 
     this.chartData.forEach((timeline) => {
       gMarg
@@ -126,44 +188,6 @@ export default class D3TimetableChartComponent extends Component {
 
   @action
   initialRender() {
-    const {
-      svgId,
-      margin,
-      width,
-      height,
-      xScale,
-      yScale,
-    } = this;
-
-    const svg = select(`svg#${svgId}`);
-    svg
-      .append('g')
-      .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
-      .attr('class', 'margin-group');
-
-    const gMarg = select(`svg#${svgId} .margin-group`);
-
-    let xAxis = axisBottom(xScale).ticks(6).tickSize(4, 1);
-
-    let yAxis = axisLeft(yScale).ticks(5).tickSize(4, 1);
-
-    svg
-      .append('g')
-      .attr(
-        'transform',
-        'translate(' + margin.left + ',' + (height - margin.bottom) + ')'
-      )
-      .attr('class', 'x axis')
-      .attr('id', 'axis--x')
-      .call(xAxis);
-
-    svg
-      .append('g')
-      .attr('class', 'y axis')
-      .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
-      .attr('id', 'axis--y')
-      .call(yAxis);
-
     this.update();
   }
 }

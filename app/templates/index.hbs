@@ -26,9 +26,31 @@
           Parse timetable CSV
         </form.submitButton>
       </BsForm>
+      <h3>
+        Chart options
+      </h3>
+      <BsForm
+        @formLayout="vertical"
+        @model={{this.chartOptions}}
+        @onSubmit={{this.changeChartOptions}} as |form|
+      >
+        <form.element @controlType="input" @label="min Y" @property="minY" />
+        <form.element @controlType="input" @label="max Y" @property="maxY" />
+        <form.element @controlType="input" @label="min X" @property="minX" />
+        <form.element @controlType="input" @label="max X" @property="maxX" />
+        <form.submitButton>
+          Change options
+        </form.submitButton>
+      </BsForm>
       <D3::TimetableChart
         @data={{take 1000 this.data}}
         @width={{960}}
+        @chartOptions={{hash
+        minY=this.chartOptions.minY
+        maxY=this.chartOptions.maxY
+        minX=this.chartOptions.minX
+        maxX=this.chartOptions.maxX
+        }}
         @aspectRatio={{0.6}}
       />
     </div>

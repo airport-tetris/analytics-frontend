@@ -908,13 +908,13 @@
     width="100%" height="100%"
     viewBox="0 0 {{this.width}} {{this.height}}"
     {{did-insert this.initialRender}}
-    {{did-update this.update @data}}
+    {{did-update this.update @data @chartOptions}}
   >
   </svg>
   */
   {
-    "id": "zp/0lQs0",
-    "block": "{\"symbols\":[\"@data\"],\"statements\":[[11,\"svg\"],[16,1,[32,0,[\"svgId\"]]],[24,\"preserveAspectRatio\",\"xMinYMin meet\"],[24,\"width\",\"100%\"],[24,\"height\",\"100%\"],[16,\"viewBox\",[31,[\"0 0 \",[32,0,[\"width\"]],\" \",[32,0,[\"height\"]]]]],[4,[38,0],[[32,0,[\"initialRender\"]]],null],[4,[38,1],[[32,0,[\"update\"]],[32,1]],null],[12],[2,\"\\n\"],[13]],\"hasEval\":false,\"upvars\":[\"did-insert\",\"did-update\"]}",
+    "id": "snHeozEl",
+    "block": "{\"symbols\":[\"@chartOptions\",\"@data\"],\"statements\":[[11,\"svg\"],[16,1,[32,0,[\"svgId\"]]],[24,\"preserveAspectRatio\",\"xMinYMin meet\"],[24,\"width\",\"100%\"],[24,\"height\",\"100%\"],[16,\"viewBox\",[31,[\"0 0 \",[32,0,[\"width\"]],\" \",[32,0,[\"height\"]]]]],[4,[38,0],[[32,0,[\"initialRender\"]]],null],[4,[38,1],[[32,0,[\"update\"]],[32,2],[32,1]],null],[12],[2,\"\\n\"],[13]],\"hasEval\":false,\"upvars\":[\"did-insert\",\"did-update\"]}",
     "moduleName": "svo-aircraft-tetris/components/d3/timetable-chart.hbs"
   });
 
@@ -943,21 +943,56 @@
       return this.width * this.aspectRatio;
     }
 
+    // get minY() {
+    //   const data = this.chartData.map((val) => { return val.y });
+    //   return this.args.chartOptions.minX || min(data);
+    // }
+    get minX() {
+      const option = this.args.chartOptions.minX;
+      const momentObj = (0, _moment.default)(option);
+      return momentObj.isValid() ? momentObj : (0, _moment.default)('2019-05-17 00:00:00', "YYYY-MM-DD hh:mm:ss");
+    }
+
+    get maxX() {
+      const option = this.args.chartOptions.maxX;
+      const momentObj = (0, _moment.default)(option);
+      return momentObj.isValid() ? momentObj : (0, _moment.default)('2019-05-17 23:59:59', "YYYY-MM-DD hh:mm:ss");
+    }
+
+    get minY() {
+      const option = this.args.chartOptions.minY;
+
+      if (option === '' || Number.isNaN(Number(option))) {
+        const data = this.chartData.map(val => {
+          return val.y;
+        });
+        return (0, _d.min)(data);
+      } else {
+        return Number(option);
+      }
+    }
+
+    get maxY() {
+      const option = this.args.chartOptions.maxY;
+
+      if (option === '' || Number.isNaN(Number(option))) {
+        const data = this.chartData.map(val => {
+          return val.y;
+        });
+        return (0, _d.max)(data);
+      } else {
+        return Number(option);
+      }
+    }
+
     get xScale() {
-      const firstDate = (0, _moment.default)('Fri May 17 2019 00:00:00');
-      const lastDate = (0, _moment.default)('Fri May 17 2019 23:59:59');
       const width = this.width - this.margin.right - this.margin.left;
-      return (0, _d.scaleTime)().range([0, width]).domain([(0, _moment.default)(firstDate), (0, _moment.default)(lastDate)]);
+      return (0, _d.scaleTime)().range([0, width]).domain([this.minX, this.maxX]);
     }
 
     get yScale() {
       const height = this.height - this.margin.top - this.margin.bottom;
-      const data = this.chartData.map(val => {
-        return val.y;
-      });
-      const minV = (0, _d.min)(data);
-      const maxV = (0, _d.max)(data);
-      return (0, _d.scaleLinear)().range([height, 0]).domain([minV, maxV]);
+      return (0, _d.scaleLinear)().range([height, 0]).domain([this.minY, this.maxY]);
     }
 
     get chartData() {
@@ -992,10 +1027,20 @@
         height,
         xScale,
         yScale
-      } = this;
-      const gMarg = (0, _d.select)(`svg#${svgId} .margin-group`);
-      gMarg.selectAll('line').remove();
-      gMarg.selectAll('circle').remove();
+      } = this; // const gMarg = select(`svg#${svgId} .margin-group`);
+      // gMarg.remove();
+      // gMarg.selectAll('line').remove();
+      // gMarg.selectAll('circle').remove();
+
+      const svg = (0, _d.select)(`svg#${svgId}`);
+      svg.select('.margin-group').remove();
+      svg.select('#axis--x').remove();
+      svg.select('#axis--y').remove();
+      const gMarg = svg.append('g').attr('transform', 'translate(' + margin.left + ',' + margin.top + ')').attr('class', 'margin-group');
+      let xAxis = (0, _d.axisBottom)(xScale).ticks(6).tickSize(4, 1);
+      let yAxis = (0, _d.axisLeft)(yScale).ticks(5).tickSize(4, 1);
+      svg.append('g').attr('transform', 'translate(' + margin.left + ',' + (height - margin.bottom) + ')').attr('class', 'x axis').attr('id', 'axis--x').call(xAxis);
+      svg.append('g').attr('class', 'y axis').attr('transform', 'translate(' + margin.left + ',' + margin.top + ')').attr('id', 'axis--y').call(yAxis);
       this.chartData.forEach(timeline => {
         gMarg.append('line').attr('x1', () => xScale(timeline.start)).attr('y1', () => yScale(timeline.y)).attr('x2', () => xScale(timeline.end)).attr('y2', () => yScale(timeline.y)).attr('class', `time-line-element-${timeline.terminal}`);
         gMarg.append('circle').attr('cx', () => xScale(timeline.dot)).attr('cy', () => yScale(timeline.y)).attr('r', 3).attr('class', `time-line-dot-${timeline.terminal}`); // gMarg
@@ -1011,21 +1056,6 @@
     }
 
     initialRender() {
-      const {
-        svgId,
-        margin,
-        width,
-        height,
-        xScale,
-        yScale
-      } = this;
-      const svg = (0, _d.select)(`svg#${svgId}`);
-      svg.append('g').attr('transform', 'translate(' + margin.left + ',' + margin.top + ')').attr('class', 'margin-group');
-      const gMarg = (0, _d.select)(`svg#${svgId} .margin-group`);
-      let xAxis = (0, _d.axisBottom)(xScale).ticks(6).tickSize(4, 1);
-      let yAxis = (0, _d.axisLeft)(yScale).ticks(5).tickSize(4, 1);
-      svg.append('g').attr('transform', 'translate(' + margin.left + ',' + (height - margin.bottom) + ')').attr('class', 'x axis').attr('id', 'axis--x').call(xAxis);
-      svg.append('g').attr('class', 'y axis').attr('transform', 'translate(' + margin.left + ',' + margin.top + ')').attr('id', 'axis--y').call(yAxis);
       this.update();
     }
 
@@ -2006,7 +2036,7 @@
     }
   });
 });
-;define("svo-aircraft-tetris/controllers/index", ["exports", "@babel/runtime/helpers/esm/initializerDefineProperty", "@babel/runtime/helpers/esm/defineProperty", "@babel/runtime/helpers/esm/applyDecoratedDescriptor", "@babel/runtime/helpers/esm/initializerWarningHelper"], function (_exports, _initializerDefineProperty2, _defineProperty2, _applyDecoratedDescriptor2, _initializerWarningHelper2) {
+;define("svo-aircraft-tetris/controllers/index", ["exports", "@babel/runtime/helpers/esm/initializerDefineProperty", "@babel/runtime/helpers/esm/defineProperty", "@babel/runtime/helpers/esm/applyDecoratedDescriptor", "@babel/runtime/helpers/esm/initializerWarningHelper", "tracked-built-ins"], function (_exports, _initializerDefineProperty2, _defineProperty2, _applyDecoratedDescriptor2, _initializerWarningHelper2, _trackedBuiltIns) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -2016,7 +2046,7 @@
 
   var _dec, _dec2, _dec3, _dec4, _class, _descriptor, _descriptor2;
 
-  let IndexController = (_dec = Ember._tracked, _dec2 = Ember.inject.service, _dec3 = Ember._action, _dec4 = Ember._action, (_class = class IndexController extends Ember.Controller {
+  let IndexController = (_dec = Ember.inject.service, _dec2 = Ember._action, _dec3 = Ember._action, _dec4 = Ember._action, (_class = class IndexController extends Ember.Controller {
     constructor(...args) {
       super(...args);
       (0, _initializerDefineProperty2.default)(this, "data", _descriptor, this);
@@ -2070,6 +2100,39 @@
       (0, _defineProperty2.default)(this, "showCurrentPageNumberSelect", true);
       (0, _defineProperty2.default)(this, "collapseNumPaginationForPagesCount", 1);
       (0, _defineProperty2.default)(this, "multipleColumnsSorting", true);
+      (0, _defineProperty2.default)(this, "timetableCSV", `,flight_AD,flight_datetime,flight_AL_Synchron_code,flight_number,flight_ID,flight_AP,flight_AC_Synchron_code,flight_AC_PAX_capacity_total,flight_PAX,Aircraft_Stand,flight_terminal,empty_spaces,air_classes,count_date,type_mc,flight_datetime_start,flight_datetime_finish,C_mc,C_away_jet,C_vc,handling_time,index
+  0,D,2019-05-17 00:05:00,SU,1424,D,CEK,32A,158,87,1,1,71,Narrow_Body,4,away,2019-05-16 23:00:00,2019-05-17 00:05:00,150,1550,1700,65,504
+  1,A,2019-05-17 00:05:00,SU,1493,D,MMK,SU9,87,80,1,1,7,Regional,4,away,2019-05-17 00:05:00,2019-05-17 00:55:00,150,1250,1400,50,547
+  2,A,2019-05-17 00:05:00,AF,1144,I,CDG,319,143,129,2,5,14,Narrow_Body,4,away,2019-05-17 00:05:00,2019-05-17 01:10:00,150,1400,1550,65,317
+  3,D,2019-05-17 00:05:00,SU,1334,D,ARH,SU9,87,72,1,1,15,Regional,4,away,2019-05-16 23:15:00,2019-05-17 00:05:00,150,1000,1150,50,442
+  4,D,2019-05-17 00:10:00,SU,1954,I,SCO,SU9,87,63,3,2,24,Regional,5,away,2019-05-16 23:20:00,2019-05-17 00:10:00,150,1000,1150,50,680
+  5,D,2019-05-17 00:10:00,SU,1948,I,AKX,SU9,87,38,4,2,49,Regional,5,away,2019-05-16 23:20:00,2019-05-17 00:10:00,150,1000,1150,50,678
+  6,A,2019-05-17 00:10:00,SU,2469,I,BUD,320,140,71,1,3,69,Narrow_Body,5,away,2019-05-17 00:10:00,2019-05-17 01:15:00,150,1300,1450,65,881
+  7,D,2019-05-17 00:10:00,SU,1478,D,ABA,73H,158,140,1,3,18,Narrow_Body,5,away,2019-05-16 23:05:00,2019-05-17 00:10:00,150,1350,1500,65,536
+  8,A,2019-05-17 00:10:00,SU,2097,I,BEG,73H,158,74,1,3,84,Narrow_Body,5,away,2019-05-17 00:10:00,2019-05-17 01:15:00,150,1300,1450,65,733
+  9,A,2019-05-17 00:20:00,SU,517,I,TLV,321,170,123,3,3,47,Narrow_Body,2,away,2019-05-17 00:20:00,2019-05-17 01:25:00,150,1350,1500,65,194
+  10,A,2019-05-17 00:20:00,SU,1427,D,CEK,73H,158,75,4,1,83,Narrow_Body,2,away,2019-05-17 00:20:00,2019-05-17 01:25:00,150,1300,1450,65,507
+  11,A,2019-05-17 00:25:00,SU,2125,I,SKG,32B,183,116,5,3,67,Narrow_Body,2,away,2019-05-17 00:25:00,2019-05-17 01:30:00,150,1350,1500,65,747
+  12,A,2019-05-17 00:25:00,SU,31,D,LED,73H,158,97,6,1,61,Narrow_Body,2,away,2019-05-17 00:25:00,2019-05-17 01:30:00,150,1550,1700,65,27
+  13,D,2019-05-17 00:30:00,EO,563,D,OSW,E90,110,60,7,3,50,Regional,1,away,2019-05-16 23:40:00,2019-05-17 00:30:00,150,1000,1150,50,211
+  14,D,2019-05-17 00:35:00,SU,1132,D,AER,SU9,87,33,8,1,54,Regional,3,away,2019-05-16 23:45:00,2019-05-17 00:35:00,150,1000,1150,50,307
+  15,A,2019-05-17 00:35:00,N4,378,I,EVN,73H,189,152,7,2,37,Narrow_Body,3,away,2019-05-17 00:35:00,2019-05-17 01:40:00,150,1450,1600,65,162
+  16,A,2019-05-17 00:35:00,SU,2539,I,OSL,73H,158,68,8,3,90,Narrow_Body,3,away,2019-05-17 00:35:00,2019-05-17 01:40:00,150,1300,1450,65,908
+  17,D,2019-05-17 00:40:00,SU,1638,D,OMS,32A,158,150,9,3,8,Narrow_Body,4,away,2019-05-16 23:35:00,2019-05-17 00:40:00,150,1350,1500,65,592
+  18,D,2019-05-17 00:40:00,SU,46,D,LED,73H,158,155,10,1,3,Narrow_Body,4,away,2019-05-16 23:35:00,2019-05-17 00:40:00,150,1550,1700,65,40
+  19,D,2019-05-17 00:40:00,FV,6167,D,REN,73H,189,145,11,3,44,Narrow_Body,4,away,2019-05-16 23:35:00,2019-05-17 00:40:00,150,1350,1500,65,968
+  20,D,2019-05-17 00:40:00,SU,1428,D,MQF,73H,158,83,12,1,75,Narrow_Body,4,jetbridge,2019-05-16 23:50:00,2019-05-17 00:40:00,300,1250,1550,50,508`);
+      (0, _defineProperty2.default)(this, "chartOptions", (0, _trackedBuiltIns.tracked)({
+        minY: '',
+        maxY: '',
+        minX: '2019-05-17 00:00:00',
+        maxX: '2019-05-17 23:59:59'
+      }));
+    }
+
+    // @tracked maxY = '';
+    changeChartOptions() {
+      console.log(this.chartOptions);
     }
 
     deleteTimetable() {
@@ -2111,17 +2174,17 @@
       }
     }
 
-  }, (_descriptor = (0, _applyDecoratedDescriptor2.default)(_class.prototype, "data", [_dec], {
+  }, (_descriptor = (0, _applyDecoratedDescriptor2.default)(_class.prototype, "data", [_trackedBuiltIns.tracked], {
     configurable: true,
     enumerable: true,
     writable: true,
     initializer: null
-  }), _descriptor2 = (0, _applyDecoratedDescriptor2.default)(_class.prototype, "store", [_dec2], {
+  }), _descriptor2 = (0, _applyDecoratedDescriptor2.default)(_class.prototype, "store", [_dec], {
     configurable: true,
     enumerable: true,
     writable: true,
     initializer: null
-  }), (0, _applyDecoratedDescriptor2.default)(_class.prototype, "deleteTimetable", [_dec3], Object.getOwnPropertyDescriptor(_class.prototype, "deleteTimetable"), _class.prototype), (0, _applyDecoratedDescriptor2.default)(_class.prototype, "parseTimetable", [_dec4], Object.getOwnPropertyDescriptor(_class.prototype, "parseTimetable"), _class.prototype)), _class));
+  }), (0, _applyDecoratedDescriptor2.default)(_class.prototype, "changeChartOptions", [_dec2], Object.getOwnPropertyDescriptor(_class.prototype, "changeChartOptions"), _class.prototype), (0, _applyDecoratedDescriptor2.default)(_class.prototype, "deleteTimetable", [_dec3], Object.getOwnPropertyDescriptor(_class.prototype, "deleteTimetable"), _class.prototype), (0, _applyDecoratedDescriptor2.default)(_class.prototype, "parseTimetable", [_dec4], Object.getOwnPropertyDescriptor(_class.prototype, "parseTimetable"), _class.prototype)), _class));
   _exports.default = IndexController;
 });
 ;define("svo-aircraft-tetris/data-adapter", ["exports", "@ember-data/debug"], function (_exports, _debug) {
@@ -3990,8 +4053,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "h8hUiFNb",
-    "block": "{\"symbols\":[\"form\"],\"statements\":[[1,[30,[36,0],[\"Index\"],null]],[2,\"\\n\"],[10,\"div\"],[14,0,\"container\"],[12],[2,\"\\n  \"],[10,\"h3\"],[12],[2,\"\\n    Timetable length\\n    \"],[1,[32,0,[\"data\",\"length\"]]],[2,\"\\n  \"],[13],[2,\"\\n  \"],[10,\"div\"],[14,0,\"row\"],[12],[2,\"\\n    \"],[10,\"div\"],[14,0,\"col-12\"],[12],[2,\"\\n      \"],[10,\"h3\"],[12],[2,\"\\n        Timetables\\n      \"],[13],[2,\"\\n      \"],[8,\"bs-form\",[],[[\"@formLayout\",\"@model\",\"@onSubmit\"],[\"vertical\",[32,0],[32,0,[\"parseTimetable\"]]]],[[\"default\"],[{\"statements\":[[2,\"\\n        \"],[11,\"button\"],[24,0,\"btn btn-primary\"],[4,[38,1],[\"click\",[32,0,[\"deleteTimetable\"]]],null],[12],[2,\"\\n          Delete timetable\\n        \"],[13],[2,\"\\n        \"],[8,[32,1,[\"element\"]],[],[[\"@controlType\",\"@label\",\"@property\"],[\"textarea\",\"Textarea\",\"timetableCSV\"]],null],[2,\"\\n        \"],[8,[32,1,[\"submitButton\"]],[],[[],[]],[[\"default\"],[{\"statements\":[[2,\"\\n          Parse timetable CSV\\n        \"]],\"parameters\":[]}]]],[2,\"\\n      \"]],\"parameters\":[1]}]]],[2,\"\\n      \"],[8,\"d3/timetable-chart\",[],[[\"@data\",\"@width\",\"@aspectRatio\"],[[30,[36,2],[1000,[32,0,[\"data\"]]],null],960,0.6]],null],[2,\"\\n    \"],[13],[2,\"\\n    \"],[10,\"div\"],[14,0,\"col-12\"],[12],[2,\"\\n      \"],[8,\"models-table\",[],[[\"@data\",\"@columns\",\"@showComponentFooter\",\"@showColumnsDropdown\",\"@useFilteringByColumns\",\"@showGlobalFilter\",\"@doFilteringByHiddenColumns\",\"@useNumericPagination\",\"@filteringIgnoreCase\",\"@multipleColumnsSorting\",\"@showCurrentPageNumberSelect\",\"@collapseNumPaginationForPagesCount\",\"@showPageSize\"],[[32,0,[\"data\"]],[32,0,[\"columns\"]],[32,0,[\"showComponentFooter\"]],[32,0,[\"showColumnsDropdown\"]],[32,0,[\"useFilteringByColumns\"]],[32,0,[\"showGlobalFilter\"]],[32,0,[\"doFilteringByHiddenColumns\"]],[32,0,[\"useNumericPagination\"]],[32,0,[\"filteringIgnoreCase\"]],[32,0,[\"multipleColumnsSorting\"]],[32,0,[\"showCurrentPageNumberSelect\"]],[32,0,[\"collapseNumPaginationForPagesCount\"]],[32,0,[\"showPageSize\"]]]],null],[2,\"\\n    \"],[13],[2,\"\\n  \"],[13],[2,\"\\n\"],[13],[2,\"\\n\"],[1,[30,[36,4],[[30,[36,3],null,null]],null]]],\"hasEval\":false,\"upvars\":[\"page-title\",\"on\",\"take\",\"-outlet\",\"component\"]}",
+    "id": "RPeH9qiY",
+    "block": "{\"symbols\":[\"form\",\"form\"],\"statements\":[[1,[30,[36,0],[\"Index\"],null]],[2,\"\\n\"],[10,\"div\"],[14,0,\"container\"],[12],[2,\"\\n  \"],[10,\"h3\"],[12],[2,\"\\n    Timetable length\\n    \"],[1,[32,0,[\"data\",\"length\"]]],[2,\"\\n  \"],[13],[2,\"\\n  \"],[10,\"div\"],[14,0,\"row\"],[12],[2,\"\\n    \"],[10,\"div\"],[14,0,\"col-12\"],[12],[2,\"\\n      \"],[10,\"h3\"],[12],[2,\"\\n        Timetables\\n      \"],[13],[2,\"\\n      \"],[8,\"bs-form\",[],[[\"@formLayout\",\"@model\",\"@onSubmit\"],[\"vertical\",[32,0],[32,0,[\"parseTimetable\"]]]],[[\"default\"],[{\"statements\":[[2,\"\\n        \"],[11,\"button\"],[24,0,\"btn btn-primary\"],[4,[38,1],[\"click\",[32,0,[\"deleteTimetable\"]]],null],[12],[2,\"\\n          Delete timetable\\n        \"],[13],[2,\"\\n        \"],[8,[32,2,[\"element\"]],[],[[\"@controlType\",\"@label\",\"@property\"],[\"textarea\",\"Textarea\",\"timetableCSV\"]],null],[2,\"\\n        \"],[8,[32,2,[\"submitButton\"]],[],[[],[]],[[\"default\"],[{\"statements\":[[2,\"\\n          Parse timetable CSV\\n        \"]],\"parameters\":[]}]]],[2,\"\\n      \"]],\"parameters\":[2]}]]],[2,\"\\n      \"],[10,\"h3\"],[12],[2,\"\\n        Chart options\\n      \"],[13],[2,\"\\n      \"],[8,\"bs-form\",[],[[\"@formLayout\",\"@model\",\"@onSubmit\"],[\"vertical\",[32,0,[\"chartOptions\"]],[32,0,[\"changeChartOptions\"]]]],[[\"default\"],[{\"statements\":[[2,\"\\n        \"],[8,[32,1,[\"element\"]],[],[[\"@controlType\",\"@label\",\"@property\"],[\"input\",\"min Y\",\"minY\"]],null],[2,\"\\n        \"],[8,[32,1,[\"element\"]],[],[[\"@controlType\",\"@label\",\"@property\"],[\"input\",\"max Y\",\"maxY\"]],null],[2,\"\\n        \"],[8,[32,1,[\"element\"]],[],[[\"@controlType\",\"@label\",\"@property\"],[\"input\",\"min X\",\"minX\"]],null],[2,\"\\n        \"],[8,[32,1,[\"element\"]],[],[[\"@controlType\",\"@label\",\"@property\"],[\"input\",\"max X\",\"maxX\"]],null],[2,\"\\n        \"],[8,[32,1,[\"submitButton\"]],[],[[],[]],[[\"default\"],[{\"statements\":[[2,\"\\n          Change options\\n        \"]],\"parameters\":[]}]]],[2,\"\\n      \"]],\"parameters\":[1]}]]],[2,\"\\n      \"],[8,\"d3/timetable-chart\",[],[[\"@data\",\"@width\",\"@chartOptions\",\"@aspectRatio\"],[[30,[36,2],[1000,[32,0,[\"data\"]]],null],960,[30,[36,3],null,[[\"minY\",\"maxY\",\"minX\",\"maxX\"],[[32,0,[\"chartOptions\",\"minY\"]],[32,0,[\"chartOptions\",\"maxY\"]],[32,0,[\"chartOptions\",\"minX\"]],[32,0,[\"chartOptions\",\"maxX\"]]]]],0.6]],null],[2,\"\\n    \"],[13],[2,\"\\n    \"],[10,\"div\"],[14,0,\"col-12\"],[12],[2,\"\\n      \"],[8,\"models-table\",[],[[\"@data\",\"@columns\",\"@showComponentFooter\",\"@showColumnsDropdown\",\"@useFilteringByColumns\",\"@showGlobalFilter\",\"@doFilteringByHiddenColumns\",\"@useNumericPagination\",\"@filteringIgnoreCase\",\"@multipleColumnsSorting\",\"@showCurrentPageNumberSelect\",\"@collapseNumPaginationForPagesCount\",\"@showPageSize\"],[[32,0,[\"data\"]],[32,0,[\"columns\"]],[32,0,[\"showComponentFooter\"]],[32,0,[\"showColumnsDropdown\"]],[32,0,[\"useFilteringByColumns\"]],[32,0,[\"showGlobalFilter\"]],[32,0,[\"doFilteringByHiddenColumns\"]],[32,0,[\"useNumericPagination\"]],[32,0,[\"filteringIgnoreCase\"]],[32,0,[\"multipleColumnsSorting\"]],[32,0,[\"showCurrentPageNumberSelect\"]],[32,0,[\"collapseNumPaginationForPagesCount\"]],[32,0,[\"showPageSize\"]]]],null],[2,\"\\n    \"],[13],[2,\"\\n  \"],[13],[2,\"\\n\"],[13],[2,\"\\n\"],[1,[30,[36,5],[[30,[36,4],null,null]],null]]],\"hasEval\":false,\"upvars\":[\"page-title\",\"on\",\"take\",\"hash\",\"-outlet\",\"component\"]}",
     "moduleName": "svo-aircraft-tetris/templates/index.hbs"
   });
 
@@ -4176,7 +4239,7 @@ catch(err) {
 
 ;
           if (!runningTests) {
-            require("svo-aircraft-tetris/app")["default"].create({"name":"svo-aircraft-tetris","version":"0.0.0+05f1aea0"});
+            require("svo-aircraft-tetris/app")["default"].create({"name":"svo-aircraft-tetris","version":"0.0.0+1f492086"});
           }
         
 //# sourceMappingURL=svo-aircraft-tetris.map
