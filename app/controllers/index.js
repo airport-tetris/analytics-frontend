@@ -4,6 +4,7 @@ import { action } from '@ember/object';
 import { inject as service } from '@ember/service';
 import { A } from '@ember/array';
 import { tracked } from 'tracked-built-ins';
+import moment from 'moment';
 
 export default class IndexController extends Controller {
   @tracked data;
@@ -144,5 +145,57 @@ export default class IndexController extends Controller {
       });
       this.data = A(allModels);
     }
+  }
+
+  get incorrectData() {
+    let stands = {};
+    const incorrectLines = [];
+    if (!this.data) {
+      return incorrectLines;
+    }
+    this.data.forEach((line, idx) => {
+      const standId = line.standId;
+      if (typeof standId === 'undefined') {
+        incorrectLines.push({
+          line,
+          error: 'Undefined stand',
+        }); // no stand
+      } else {
+        if (typeof stands[standId] === 'undefined') {
+          stands[standId] = [];
+        }
+        stands[standId].push(idx);
+      }
+    });
+
+    const linesIntersection = Object.keys(stands)
+      .map((key) => {
+        // let result = false;
+        // let incorrectLines = [];
+        let standLineIds = stands[key].sort((a, b) => {
+          moment(this.data[b].start) > moment(this.data[a].start);
+        });
+        standLineIds = standLineIds.filter((id, i) => {
+          if (i === 0) return false;
+          const prevId = standLineIds[i - 1];
+          return moment(this.data[id].start) < moment(this.data[prevId].end);
+        });
+        return standLineIds.map((id) => {
+          return this.data[id];
+        });
+      })
+      .filter((lines) => {
+        return lines.length > 0;
+      });
+
+    linesIntersection.forEach((standIncorrectLines) => {
+      standIncorrectLines.forEach((line) => {
+        incorrectLines.push({
+          line,
+          error: `Stand ${line.standId} line time ${line.time} starts before prev flight finish`,
+        });
+      });
+    });
+    return incorrectLines;
   }
 }

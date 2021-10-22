@@ -15,7 +15,7 @@
         @onSubmit={{this.parseTimetable}} as |form|
       >
         <button class="btn btn-primary" {{on 'click' this.deleteTimetable}}>
-          Delete timetable
+          Delete timetable models
         </button>
         <form.element
           @controlType="textarea"
@@ -26,6 +26,25 @@
           Parse timetable CSV
         </form.submitButton>
       </BsForm>
+      <div class="row">
+        <div class="col-12">
+          Number of errors
+          {{this.incorrectData.length}}
+        </div>
+        {{#each (take 30 this.incorrectData) as |lineError|}}
+          <div class="col-3">
+            {{lineError.error}}
+          </div>
+          <div class="col-9">
+            start
+            {{lineError.line.start}}
+            finish
+            {{lineError.line.end}}
+            stand
+            {{lineError.line.standId}}
+          </div>
+        {{/each}}
+      </div>
       <h3>
         Chart options
       </h3>
@@ -43,13 +62,13 @@
         </form.submitButton>
       </BsForm>
       <D3::TimetableChart
-        @data={{take 1000 this.data}}
+        @data={{this.data}}
         @width={{960}}
         @chartOptions={{hash
-        minY=this.chartOptions.minY
-        maxY=this.chartOptions.maxY
-        minX=this.chartOptions.minX
-        maxX=this.chartOptions.maxX
+          minY=this.chartOptions.minY
+          maxY=this.chartOptions.maxY
+          minX=this.chartOptions.minX
+          maxX=this.chartOptions.maxX
         }}
         @aspectRatio={{0.6}}
       />
