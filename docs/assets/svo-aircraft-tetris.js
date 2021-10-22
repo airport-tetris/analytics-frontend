@@ -898,7 +898,7 @@
   });
   _exports.default = void 0;
 
-  var _dec, _class;
+  var _dec, _dec2, _class;
 
   const __COLOCATED_TEMPLATE__ = Ember.HTMLBars.template(
   /*
@@ -908,16 +908,17 @@
     width="100%" height="100%"
     viewBox="0 0 {{this.width}} {{this.height}}"
     {{did-insert this.initialRender}}
+    {{did-update this.update @data}}
   >
   </svg>
   */
   {
-    "id": "bqtsr/xJ",
-    "block": "{\"symbols\":[],\"statements\":[[11,\"svg\"],[16,1,[32,0,[\"svgId\"]]],[24,\"preserveAspectRatio\",\"xMinYMin meet\"],[24,\"width\",\"100%\"],[24,\"height\",\"100%\"],[16,\"viewBox\",[31,[\"0 0 \",[32,0,[\"width\"]],\" \",[32,0,[\"height\"]]]]],[4,[38,0],[[32,0,[\"initialRender\"]]],null],[12],[2,\"\\n\"],[13]],\"hasEval\":false,\"upvars\":[\"did-insert\"]}",
+    "id": "zp/0lQs0",
+    "block": "{\"symbols\":[\"@data\"],\"statements\":[[11,\"svg\"],[16,1,[32,0,[\"svgId\"]]],[24,\"preserveAspectRatio\",\"xMinYMin meet\"],[24,\"width\",\"100%\"],[24,\"height\",\"100%\"],[16,\"viewBox\",[31,[\"0 0 \",[32,0,[\"width\"]],\" \",[32,0,[\"height\"]]]]],[4,[38,0],[[32,0,[\"initialRender\"]]],null],[4,[38,1],[[32,0,[\"update\"]],[32,1]],null],[12],[2,\"\\n\"],[13]],\"hasEval\":false,\"upvars\":[\"did-insert\",\"did-update\"]}",
     "moduleName": "svo-aircraft-tetris/components/d3/timetable-chart.hbs"
   });
 
-  let D3TimetableChartComponent = (_dec = Ember._action, (_class = class D3TimetableChartComponent extends _component.default {
+  let D3TimetableChartComponent = (_dec = Ember._action, _dec2 = Ember._action, (_class = class D3TimetableChartComponent extends _component.default {
     constructor() {
       super(...arguments);
       (0, _defineProperty2.default)(this, "margin", {
@@ -951,13 +952,17 @@
 
     get yScale() {
       const height = this.height - this.margin.top - this.margin.bottom;
-      const min = 0;
-      const max = 280;
-      return (0, _d.scaleLinear)().range([height, 0]).domain([min, max]);
+      const data = this.chartData.map(val => {
+        return val.y;
+      });
+      const minV = (0, _d.min)(data);
+      const maxV = (0, _d.max)(data);
+      return (0, _d.scaleLinear)().range([height, 0]).domain([minV, maxV]);
     }
 
     get chartData() {
-      return this.args.data.map(value => {
+      const data = this.args.data || [];
+      return data.map(value => {
         // const time = moment(value.time);
         let result = {}; // let result = value.isArrival
         //   ? {
@@ -979,6 +984,32 @@
       });
     }
 
+    update() {
+      const {
+        svgId,
+        margin,
+        width,
+        height,
+        xScale,
+        yScale
+      } = this;
+      const gMarg = (0, _d.select)(`svg#${svgId} .margin-group`);
+      gMarg.selectAll('line').remove();
+      gMarg.selectAll('circle').remove();
+      this.chartData.forEach(timeline => {
+        gMarg.append('line').attr('x1', () => xScale(timeline.start)).attr('y1', () => yScale(timeline.y)).attr('x2', () => xScale(timeline.end)).attr('y2', () => yScale(timeline.y)).attr('class', `time-line-element-${timeline.terminal}`);
+        gMarg.append('circle').attr('cx', () => xScale(timeline.dot)).attr('cy', () => yScale(timeline.y)).attr('r', 3).attr('class', `time-line-dot-${timeline.terminal}`); // gMarg
+        //   .append('text')
+        //   .attr('class', 'line-text')
+        //   .attr('x', 0)
+        //   .attr('y', () => yScale(th.value))
+        //   .attr('dx', 10)
+        //   .attr('dy', -5)
+        //   .attr('class', th.type)
+        //   .text(format('.0f')(th.value));
+      });
+    }
+
     initialRender() {
       const {
         svgId,
@@ -995,21 +1026,10 @@
       let yAxis = (0, _d.axisLeft)(yScale).ticks(5).tickSize(4, 1);
       svg.append('g').attr('transform', 'translate(' + margin.left + ',' + (height - margin.bottom) + ')').attr('class', 'x axis').attr('id', 'axis--x').call(xAxis);
       svg.append('g').attr('class', 'y axis').attr('transform', 'translate(' + margin.left + ',' + margin.top + ')').attr('id', 'axis--y').call(yAxis);
-      this.chartData.forEach(timeline => {
-        gMarg.append('line').attr('x1', () => xScale(timeline.start)).attr('y1', () => yScale(timeline.y)).attr('x2', () => xScale(timeline.end)).attr('y2', () => yScale(timeline.y)).attr('class', `time-line-element-${timeline.terminal}`);
-        gMarg.append('circle').attr('cx', () => xScale(timeline.dot)).attr('cy', () => yScale(timeline.y)).attr('r', 3).attr('class', `time-line-dot-${timeline.terminal}`); // gMarg
-        //   .append('text')
-        //   .attr('class', 'line-text')
-        //   .attr('x', 0)
-        //   .attr('y', () => yScale(th.value))
-        //   .attr('dx', 10)
-        //   .attr('dy', -5)
-        //   .attr('class', th.type)
-        //   .text(format('.0f')(th.value));
-      });
+      this.update();
     }
 
-  }, ((0, _applyDecoratedDescriptor2.default)(_class.prototype, "initialRender", [_dec], Object.getOwnPropertyDescriptor(_class.prototype, "initialRender"), _class.prototype)), _class));
+  }, ((0, _applyDecoratedDescriptor2.default)(_class.prototype, "update", [_dec], Object.getOwnPropertyDescriptor(_class.prototype, "update"), _class.prototype), (0, _applyDecoratedDescriptor2.default)(_class.prototype, "initialRender", [_dec2], Object.getOwnPropertyDescriptor(_class.prototype, "initialRender"), _class.prototype)), _class));
   _exports.default = D3TimetableChartComponent;
 
   Ember._setComponentTemplate(__COLOCATED_TEMPLATE__, D3TimetableChartComponent);
@@ -1994,9 +2014,9 @@
   });
   _exports.default = void 0;
 
-  var _dec, _dec2, _dec3, _class, _descriptor, _descriptor2;
+  var _dec, _dec2, _dec3, _dec4, _class, _descriptor, _descriptor2;
 
-  let IndexController = (_dec = Ember._tracked, _dec2 = Ember.inject.service, _dec3 = Ember._action, (_class = class IndexController extends Ember.Controller {
+  let IndexController = (_dec = Ember._tracked, _dec2 = Ember.inject.service, _dec3 = Ember._action, _dec4 = Ember._action, (_class = class IndexController extends Ember.Controller {
     constructor(...args) {
       super(...args);
       (0, _initializerDefineProperty2.default)(this, "data", _descriptor, this);
@@ -2052,30 +2072,56 @@
       (0, _defineProperty2.default)(this, "multipleColumnsSorting", true);
     }
 
+    deleteTimetable() {
+      this.store.unloadAll('timetable');
+    }
+
     parseTimetable() {
-      //     id,flight_AD,flight_datetime,flight_AL_Synchron_code,flight_number,flight_ID,flight_AP,flight_AC_Synchron_code,flight_AC_PAX_capacity_total,flight_PAX,Aircraft_Stand,flight_terminal,empty_spaces,air_classes,count_date,type_mc,flight_datetime_start,flight_datetime_finish,C_vc,index
+      //     ,flight_AD,flight_datetime,flight_AL_Synchron_code,flight_number,flight_ID,flight_AP,flight_AC_Synchron_code,flight_AC_PAX_capacity_total,flight_PAX,Aircraft_Stand,flight_terminal,empty_spaces,air_classes,count_date,type_mc,flight_datetime_start,flight_datetime_finish,C_vc,index
       // 0,D,2019-05-17 00:05:00,SU,1424,D,CEK,32A,158,87,86,1,71,Narrow_Body,4,away,2019-05-16 23:00:00,2019-05-17 00:05:00,1550,504
       // 1,A,2019-05-17 00:05:00,SU,1493,D,MMK,SU9,87,80,86,1,7,Regional,4,away,2019-05-17 00:05:00,2019-05-17 00:55:00,1250,547
-      console.log(this.timetableCSV);
+      // console.log(this.timetableCSV);
       const strings = this.timetableCSV.split('\n');
-      this.store.unloadAll('post').then(() => {
-        strings.slice(1).forEach(str => {});
-      });
+      let allModels = [];
+
+      if (strings.slice(0, 1).slice(0, 20) === ',flight_AD,flight_da') {
+        alert('Header is incorrect');
+      } else {
+        strings.slice(1).forEach(str => {
+          const timetable = str.split(',');
+          let [id, ad, datetime, alSyn, flightNumber, fId, ap, acSyn, paxTotal, pax, airStand, terminal,,,,, start, finish, cost, ...rest] = timetable;
+          allModels.push(this.store.createRecord('timetable', {
+            // id: Number(id) + 1,
+            isArrival: ad === 'A',
+            time: datetime,
+            airline: alSyn,
+            synchronCode: flightNumber,
+            flightType: fId,
+            terminalId: terminal,
+            airport: ap,
+            pax: pax,
+            paxCapTotal: paxTotal,
+            standId: airStand,
+            start: start,
+            end: finish,
+            cost: cost
+          }));
+        });
+        this.data = Ember.A(allModels);
+      }
     }
 
   }, (_descriptor = (0, _applyDecoratedDescriptor2.default)(_class.prototype, "data", [_dec], {
     configurable: true,
     enumerable: true,
     writable: true,
-    initializer: function () {
-      return this.model;
-    }
+    initializer: null
   }), _descriptor2 = (0, _applyDecoratedDescriptor2.default)(_class.prototype, "store", [_dec2], {
     configurable: true,
     enumerable: true,
     writable: true,
     initializer: null
-  }), (0, _applyDecoratedDescriptor2.default)(_class.prototype, "parseTimetable", [_dec3], Object.getOwnPropertyDescriptor(_class.prototype, "parseTimetable"), _class.prototype)), _class));
+  }), (0, _applyDecoratedDescriptor2.default)(_class.prototype, "deleteTimetable", [_dec3], Object.getOwnPropertyDescriptor(_class.prototype, "deleteTimetable"), _class.prototype), (0, _applyDecoratedDescriptor2.default)(_class.prototype, "parseTimetable", [_dec4], Object.getOwnPropertyDescriptor(_class.prototype, "parseTimetable"), _class.prototype)), _class));
   _exports.default = IndexController;
 });
 ;define("svo-aircraft-tetris/data-adapter", ["exports", "@ember-data/debug"], function (_exports, _debug) {
@@ -3585,9 +3631,9 @@
   });
   _exports.default = void 0;
 
-  var _dec, _dec2, _dec3, _dec4, _dec5, _dec6, _dec7, _dec8, _dec9, _dec10, _dec11, _dec12, _class, _descriptor, _descriptor2, _descriptor3, _descriptor4, _descriptor5, _descriptor6, _descriptor7, _descriptor8, _descriptor9, _descriptor10, _descriptor11, _descriptor12;
+  var _dec, _dec2, _dec3, _dec4, _dec5, _dec6, _dec7, _dec8, _dec9, _dec10, _dec11, _dec12, _dec13, _class, _descriptor, _descriptor2, _descriptor3, _descriptor4, _descriptor5, _descriptor6, _descriptor7, _descriptor8, _descriptor9, _descriptor10, _descriptor11, _descriptor12, _descriptor13;
 
-  let TimetableModel = (_dec = (0, _model.attr)('boolean'), _dec2 = (0, _model.attr)('date'), _dec3 = (0, _model.attr)('date'), _dec4 = (0, _model.attr)('date'), _dec5 = (0, _model.attr)('string'), _dec6 = (0, _model.attr)('string'), _dec7 = (0, _model.attr)('string'), _dec8 = (0, _model.attr)('string'), _dec9 = (0, _model.attr)('number'), _dec10 = (0, _model.attr)('number'), _dec11 = (0, _model.attr)('number'), _dec12 = (0, _model.attr)('number'), (_class = class TimetableModel extends _model.default {
+  let TimetableModel = (_dec = (0, _model.attr)('boolean'), _dec2 = (0, _model.attr)('date'), _dec3 = (0, _model.attr)('date'), _dec4 = (0, _model.attr)('date'), _dec5 = (0, _model.attr)('string'), _dec6 = (0, _model.attr)('string'), _dec7 = (0, _model.attr)('string'), _dec8 = (0, _model.attr)('string'), _dec9 = (0, _model.attr)('number'), _dec10 = (0, _model.attr)('number'), _dec11 = (0, _model.attr)('number'), _dec12 = (0, _model.attr)('number'), _dec13 = (0, _model.attr)('number'), (_class = class TimetableModel extends _model.default {
     constructor(...args) {
       super(...args);
       (0, _initializerDefineProperty2.default)(this, "isArrival", _descriptor, this);
@@ -3602,6 +3648,7 @@
       (0, _initializerDefineProperty2.default)(this, "paxCapTotal", _descriptor10, this);
       (0, _initializerDefineProperty2.default)(this, "terminalId", _descriptor11, this);
       (0, _initializerDefineProperty2.default)(this, "standId", _descriptor12, this);
+      (0, _initializerDefineProperty2.default)(this, "cost", _descriptor13, this);
     }
 
     get pseudoAcCode() {
@@ -3664,6 +3711,11 @@
     writable: true,
     initializer: null
   }), _descriptor12 = (0, _applyDecoratedDescriptor2.default)(_class.prototype, "standId", [_dec12], {
+    configurable: true,
+    enumerable: true,
+    writable: true,
+    initializer: null
+  }), _descriptor13 = (0, _applyDecoratedDescriptor2.default)(_class.prototype, "cost", [_dec13], {
     configurable: true,
     enumerable: true,
     writable: true,
@@ -3896,8 +3948,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "eWp3a6NG",
-    "block": "{\"symbols\":[],\"statements\":[[1,[30,[36,0],[\"SvoAircraftTetris\"],null]],[2,\"\\n\\n\\n\\n\"],[1,[30,[36,2],[[30,[36,1],null,null]],null]]],\"hasEval\":false,\"upvars\":[\"page-title\",\"-outlet\",\"component\"]}",
+    "id": "aAQdKysn",
+    "block": "{\"symbols\":[],\"statements\":[[1,[30,[36,0],[\"SvoAircraftTetris\"],null]],[2,\"\\n\\n\"],[1,[30,[36,2],[[30,[36,1],null,null]],null]]],\"hasEval\":false,\"upvars\":[\"page-title\",\"-outlet\",\"component\"]}",
     "moduleName": "svo-aircraft-tetris/templates/application.hbs"
   });
 
@@ -3938,8 +3990,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "bE9t3VWr",
-    "block": "{\"symbols\":[\"form\",\"@model\"],\"statements\":[[1,[30,[36,0],[\"Index\"],null]],[2,\"\\n\"],[10,\"div\"],[14,0,\"container\"],[12],[2,\"\\n  \"],[10,\"h3\"],[12],[2,\"\\n    Timetable length\\n    \"],[1,[32,2,[\"length\"]]],[2,\"\\n  \"],[13],[2,\"\\n  \"],[10,\"div\"],[14,0,\"row\"],[12],[2,\"\\n    \"],[10,\"div\"],[14,0,\"col-12\"],[12],[2,\"\\n      \"],[10,\"h3\"],[12],[2,\"\\n        Timetables\\n      \"],[13],[2,\"\\n      \"],[8,\"bs-form\",[],[[\"@formLayout\",\"@model\",\"@onSubmit\"],[\"vertical\",[32,0],[32,0,[\"parseTimetable\"]]]],[[\"default\"],[{\"statements\":[[2,\"\\n        \"],[8,[32,1,[\"element\"]],[],[[\"@controlType\",\"@label\",\"@property\"],[\"textarea\",\"Textarea\",\"timetableCSV\"]],null],[2,\"\\n        \"],[8,[32,1,[\"submitButton\"]],[],[[],[]],[[\"default\"],[{\"statements\":[[2,\"\\n          Parse timetable CSV\\n        \"]],\"parameters\":[]}]]],[2,\"\\n      \"]],\"parameters\":[1]}]]],[2,\"\\n      \"],[8,\"d3/timetable-chart\",[],[[\"@data\",\"@width\",\"@aspectRatio\"],[[30,[36,1],[1000,[32,0,[\"data\"]]],null],960,0.6]],null],[2,\"\\n    \"],[13],[2,\"\\n    \"],[10,\"div\"],[14,0,\"col-12\"],[12],[2,\"\\n      \"],[8,\"models-table\",[],[[\"@data\",\"@columns\",\"@showComponentFooter\",\"@showColumnsDropdown\",\"@useFilteringByColumns\",\"@showGlobalFilter\",\"@doFilteringByHiddenColumns\",\"@useNumericPagination\",\"@filteringIgnoreCase\",\"@multipleColumnsSorting\",\"@showCurrentPageNumberSelect\",\"@collapseNumPaginationForPagesCount\",\"@showPageSize\"],[[32,0,[\"data\"]],[32,0,[\"columns\"]],[32,0,[\"showComponentFooter\"]],[32,0,[\"showColumnsDropdown\"]],[32,0,[\"useFilteringByColumns\"]],[32,0,[\"showGlobalFilter\"]],[32,0,[\"doFilteringByHiddenColumns\"]],[32,0,[\"useNumericPagination\"]],[32,0,[\"filteringIgnoreCase\"]],[32,0,[\"multipleColumnsSorting\"]],[32,0,[\"showCurrentPageNumberSelect\"]],[32,0,[\"collapseNumPaginationForPagesCount\"]],[32,0,[\"showPageSize\"]]]],null],[2,\"\\n    \"],[13],[2,\"\\n  \"],[13],[2,\"\\n\"],[13],[2,\"\\n\"],[1,[30,[36,3],[[30,[36,2],null,null]],null]]],\"hasEval\":false,\"upvars\":[\"page-title\",\"take\",\"-outlet\",\"component\"]}",
+    "id": "h8hUiFNb",
+    "block": "{\"symbols\":[\"form\"],\"statements\":[[1,[30,[36,0],[\"Index\"],null]],[2,\"\\n\"],[10,\"div\"],[14,0,\"container\"],[12],[2,\"\\n  \"],[10,\"h3\"],[12],[2,\"\\n    Timetable length\\n    \"],[1,[32,0,[\"data\",\"length\"]]],[2,\"\\n  \"],[13],[2,\"\\n  \"],[10,\"div\"],[14,0,\"row\"],[12],[2,\"\\n    \"],[10,\"div\"],[14,0,\"col-12\"],[12],[2,\"\\n      \"],[10,\"h3\"],[12],[2,\"\\n        Timetables\\n      \"],[13],[2,\"\\n      \"],[8,\"bs-form\",[],[[\"@formLayout\",\"@model\",\"@onSubmit\"],[\"vertical\",[32,0],[32,0,[\"parseTimetable\"]]]],[[\"default\"],[{\"statements\":[[2,\"\\n        \"],[11,\"button\"],[24,0,\"btn btn-primary\"],[4,[38,1],[\"click\",[32,0,[\"deleteTimetable\"]]],null],[12],[2,\"\\n          Delete timetable\\n        \"],[13],[2,\"\\n        \"],[8,[32,1,[\"element\"]],[],[[\"@controlType\",\"@label\",\"@property\"],[\"textarea\",\"Textarea\",\"timetableCSV\"]],null],[2,\"\\n        \"],[8,[32,1,[\"submitButton\"]],[],[[],[]],[[\"default\"],[{\"statements\":[[2,\"\\n          Parse timetable CSV\\n        \"]],\"parameters\":[]}]]],[2,\"\\n      \"]],\"parameters\":[1]}]]],[2,\"\\n      \"],[8,\"d3/timetable-chart\",[],[[\"@data\",\"@width\",\"@aspectRatio\"],[[30,[36,2],[1000,[32,0,[\"data\"]]],null],960,0.6]],null],[2,\"\\n    \"],[13],[2,\"\\n    \"],[10,\"div\"],[14,0,\"col-12\"],[12],[2,\"\\n      \"],[8,\"models-table\",[],[[\"@data\",\"@columns\",\"@showComponentFooter\",\"@showColumnsDropdown\",\"@useFilteringByColumns\",\"@showGlobalFilter\",\"@doFilteringByHiddenColumns\",\"@useNumericPagination\",\"@filteringIgnoreCase\",\"@multipleColumnsSorting\",\"@showCurrentPageNumberSelect\",\"@collapseNumPaginationForPagesCount\",\"@showPageSize\"],[[32,0,[\"data\"]],[32,0,[\"columns\"]],[32,0,[\"showComponentFooter\"]],[32,0,[\"showColumnsDropdown\"]],[32,0,[\"useFilteringByColumns\"]],[32,0,[\"showGlobalFilter\"]],[32,0,[\"doFilteringByHiddenColumns\"]],[32,0,[\"useNumericPagination\"]],[32,0,[\"filteringIgnoreCase\"]],[32,0,[\"multipleColumnsSorting\"]],[32,0,[\"showCurrentPageNumberSelect\"]],[32,0,[\"collapseNumPaginationForPagesCount\"]],[32,0,[\"showPageSize\"]]]],null],[2,\"\\n    \"],[13],[2,\"\\n  \"],[13],[2,\"\\n\"],[13],[2,\"\\n\"],[1,[30,[36,4],[[30,[36,3],null,null]],null]]],\"hasEval\":false,\"upvars\":[\"page-title\",\"on\",\"take\",\"-outlet\",\"component\"]}",
     "moduleName": "svo-aircraft-tetris/templates/index.hbs"
   });
 
@@ -4124,7 +4176,7 @@ catch(err) {
 
 ;
           if (!runningTests) {
-            require("svo-aircraft-tetris/app")["default"].create({"name":"svo-aircraft-tetris","version":"0.0.0+16b3192d"});
+            require("svo-aircraft-tetris/app")["default"].create({"name":"svo-aircraft-tetris","version":"0.0.0+05f1aea0"});
           }
         
 //# sourceMappingURL=svo-aircraft-tetris.map

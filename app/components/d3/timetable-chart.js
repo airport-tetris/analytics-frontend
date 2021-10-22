@@ -8,6 +8,8 @@ import {
   line,
   format,
   axisLeft,
+  min,
+  max,
 } from 'd3';
 import moment from 'moment';
 
@@ -48,13 +50,15 @@ export default class D3TimetableChartComponent extends Component {
 
   get yScale() {
     const height = this.height - this.margin.top - this.margin.bottom;
-    const min = 0;
-    const max = 280;
-    return scaleLinear().range([height, 0]).domain([min, max]);
+    const data = this.chartData.map((val) => { return val.y });
+    const minV = min(data);
+    const maxV = max(data);
+    return scaleLinear().range([height, 0]).domain([minV, maxV]);
   }
 
   get chartData() {
-    return this.args.data.map((value) => {
+    const data = this.args.data || [];
+    return data.map((value) => {
       // const time = moment(value.time);
       let result = {};
       // let result = value.isArrival
@@ -74,6 +78,50 @@ export default class D3TimetableChartComponent extends Component {
       result['terminal'] = value.terminalId;
       return result;
     });
+  }
+
+  @action
+  update() {
+    const {
+      svgId,
+      margin,
+      width,
+      height,
+      xScale,
+      yScale,
+    } = this;
+
+    const gMarg = select(`svg#${svgId} .margin-group`);
+    gMarg.selectAll('line').remove();
+    gMarg.selectAll('circle').remove();
+
+    this.chartData.forEach((timeline) => {
+      gMarg
+        .append('line')
+        .attr('x1', () => xScale(timeline.start))
+        .attr('y1', () => yScale(timeline.y))
+        .attr('x2', () => xScale(timeline.end))
+        .attr('y2', () => yScale(timeline.y))
+        .attr('class', `time-line-element-${timeline.terminal}`);
+
+      gMarg
+        .append('circle')
+        .attr('cx', () => xScale(timeline.dot))
+        .attr('cy', () => yScale(timeline.y))
+        .attr('r', 3)
+        .attr('class', `time-line-dot-${timeline.terminal}`);
+
+      // gMarg
+      //   .append('text')
+      //   .attr('class', 'line-text')
+      //   .attr('x', 0)
+      //   .attr('y', () => yScale(th.value))
+      //   .attr('dx', 10)
+      //   .attr('dy', -5)
+      //   .attr('class', th.type)
+      //   .text(format('.0f')(th.value));
+    });
+
   }
 
   @action
@@ -116,34 +164,6 @@ export default class D3TimetableChartComponent extends Component {
       .attr('id', 'axis--y')
       .call(yAxis);
 
-    this.chartData.forEach((timeline) => {
-      gMarg
-        .append('line')
-        .attr('x1', () => xScale(timeline.start))
-        .attr('y1', () => yScale(timeline.y))
-        .attr('x2', () => xScale(timeline.end))
-        .attr('y2', () => yScale(timeline.y))
-        .attr('class', `time-line-element-${timeline.terminal}`);
-
-      gMarg
-        .append('circle')
-        .attr('cx', () => xScale(timeline.dot))
-        .attr('cy', () => yScale(timeline.y))
-        .attr('r', 3)
-        .attr('class', `time-line-dot-${timeline.terminal}`);
-
-      // gMarg
-      //   .append('text')
-      //   .attr('class', 'line-text')
-      //   .attr('x', 0)
-      //   .attr('y', () => yScale(th.value))
-      //   .attr('dx', 10)
-      //   .attr('dy', -5)
-      //   .attr('class', th.type)
-      //   .text(format('.0f')(th.value));
-    });
-
-
+    this.update();
   }
-
 }

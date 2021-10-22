@@ -15,6 +15,7 @@ export default class TimetableModel extends Model {
 
   @attr('number') terminalId;
   @attr('number') standId;
+  @attr('number') cost;
   get pseudoAcCode() {
     return `${this.airline}-${this.paxCapTotal}-${this.synchronCode}-${this.terminalId}`;
   }

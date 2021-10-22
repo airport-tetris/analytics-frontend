@@ -2,9 +2,10 @@ import Controller from '@ember/controller';
 import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
 import { inject as service } from '@ember/service';
+import { A } from '@ember/array';
 
 export default class IndexController extends Controller {
-  @tracked data = this.model;
+  @tracked data;
   @service store;
 
   columnSets = [
@@ -65,24 +66,44 @@ export default class IndexController extends Controller {
   multipleColumnsSorting = true;
 
   @action
+  deleteTimetable() {
+    this.store.unloadAll('timetable');
+  }
+
+  @action
   parseTimetable() {
-    //     id,flight_AD,flight_datetime,flight_AL_Synchron_code,flight_number,flight_ID,flight_AP,flight_AC_Synchron_code,flight_AC_PAX_capacity_total,flight_PAX,Aircraft_Stand,flight_terminal,empty_spaces,air_classes,count_date,type_mc,flight_datetime_start,flight_datetime_finish,C_vc,index
+    //     ,flight_AD,flight_datetime,flight_AL_Synchron_code,flight_number,flight_ID,flight_AP,flight_AC_Synchron_code,flight_AC_PAX_capacity_total,flight_PAX,Aircraft_Stand,flight_terminal,empty_spaces,air_classes,count_date,type_mc,flight_datetime_start,flight_datetime_finish,C_vc,index
     // 0,D,2019-05-17 00:05:00,SU,1424,D,CEK,32A,158,87,86,1,71,Narrow_Body,4,away,2019-05-16 23:00:00,2019-05-17 00:05:00,1550,504
     // 1,A,2019-05-17 00:05:00,SU,1493,D,MMK,SU9,87,80,86,1,7,Regional,4,away,2019-05-17 00:05:00,2019-05-17 00:55:00,1250,547
-    console.log(this.timetableCSV);
+    // console.log(this.timetableCSV);
     const strings = this.timetableCSV.split('\n');
-
-    this.store.unloadAll('post').then(() => {
+    let allModels = [];
+    if (strings.slice(0, 1).slice(0, 20) === ',flight_AD,flight_da') {
+      alert('Header is incorrect');
+    } else {
       strings.slice(1).forEach((str) => {
-
-
+        const timetable = str.split(',');
+        let [id, ad, datetime, alSyn, flightNumber, fId, ap, acSyn, paxTotal, pax, airStand, terminal, , , , , start, finish, cost, ...rest] = timetable;
+        allModels.push(
+          this.store.createRecord('timetable', {
+            // id: Number(id) + 1,
+            isArrival: ad === 'A',
+            time: datetime,
+            airline: alSyn,
+            synchronCode: flightNumber,
+            flightType: fId,
+            terminalId: terminal,
+            airport: ap,
+            pax: pax,
+            paxCapTotal: paxTotal,
+            standId: airStand,
+            start: start,
+            end: finish,
+            cost: cost,
+          })
+        );
       });
-    })
-
-
-
-
-
-
+      this.data = A(allModels);
+    }
   }
 }
