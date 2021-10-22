@@ -2036,7 +2036,7 @@
     }
   });
 });
-;define("svo-aircraft-tetris/controllers/index", ["exports", "@babel/runtime/helpers/esm/initializerDefineProperty", "@babel/runtime/helpers/esm/defineProperty", "@babel/runtime/helpers/esm/applyDecoratedDescriptor", "@babel/runtime/helpers/esm/initializerWarningHelper", "tracked-built-ins"], function (_exports, _initializerDefineProperty2, _defineProperty2, _applyDecoratedDescriptor2, _initializerWarningHelper2, _trackedBuiltIns) {
+;define("svo-aircraft-tetris/controllers/index", ["exports", "@babel/runtime/helpers/esm/initializerDefineProperty", "@babel/runtime/helpers/esm/defineProperty", "@babel/runtime/helpers/esm/applyDecoratedDescriptor", "@babel/runtime/helpers/esm/initializerWarningHelper", "tracked-built-ins", "moment"], function (_exports, _initializerDefineProperty2, _defineProperty2, _applyDecoratedDescriptor2, _initializerWarningHelper2, _trackedBuiltIns, _moment) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -2044,7 +2044,7 @@
   });
   _exports.default = void 0;
 
-  var _dec, _dec2, _dec3, _dec4, _class, _descriptor, _descriptor2;
+  var _dec, _dec2, _dec3, _dec4, _class, _descriptor, _descriptor2, _descriptor3;
 
   let IndexController = (_dec = Ember.inject.service, _dec2 = Ember._action, _dec3 = Ember._action, _dec4 = Ember._action, (_class = class IndexController extends Ember.Controller {
     constructor(...args) {
@@ -2128,6 +2128,7 @@
         minX: '2019-05-17 00:00:00',
         maxX: '2019-05-17 23:59:59'
       }));
+      (0, _initializerDefineProperty2.default)(this, "incorrectLines", _descriptor3, this);
     }
 
     // @tracked maxY = '';
@@ -2174,6 +2175,54 @@
       }
     }
 
+    get stands() {
+      let stands = {}; // const incorrectLines = [];
+
+      if (!this.data) {
+        return [];
+      }
+
+      this.data.forEach((line, idx) => {
+        const standId = line.standId;
+
+        if (typeof standId === 'undefined') {
+          console.warn(`Undefined stand for line ${line}`);
+        } else {
+          if (typeof stands[standId] === 'undefined') {
+            stands[standId] = [];
+          }
+
+          stands[standId].push(idx);
+        }
+      });
+      const standStructure = Object.keys(stands).map(key => {
+        // let result = false;
+        // let incorrectLines = [];
+        let standLineIds = stands[key].sort((a, b) => {
+          (0, _moment.default)(this.data[b].start) > (0, _moment.default)(this.data[a].start);
+        });
+        return {
+          standId: key,
+          lines: standLineIds.map(id => {
+            return this.data[id];
+          })
+        };
+      });
+      return standStructure;
+    }
+
+    get incorrectData() {
+      const stands = this.stands;
+      const incorrectLines = stands.filter(stand => {
+        const intersectedLines = stand.lines.filter((line, i) => {
+          if (i === 0) return false;
+          return (0, _moment.default)(line.start) < (0, _moment.default)(stand.lines[i - 1].end);
+        });
+        return intersectedLines.length > 0;
+      });
+      return incorrectLines;
+    }
+
   }, (_descriptor = (0, _applyDecoratedDescriptor2.default)(_class.prototype, "data", [_trackedBuiltIns.tracked], {
     configurable: true,
     enumerable: true,
@@ -2184,7 +2233,14 @@
     enumerable: true,
     writable: true,
     initializer: null
-  }), (0, _applyDecoratedDescriptor2.default)(_class.prototype, "changeChartOptions", [_dec2], Object.getOwnPropertyDescriptor(_class.prototype, "changeChartOptions"), _class.prototype), (0, _applyDecoratedDescriptor2.default)(_class.prototype, "deleteTimetable", [_dec3], Object.getOwnPropertyDescriptor(_class.prototype, "deleteTimetable"), _class.prototype), (0, _applyDecoratedDescriptor2.default)(_class.prototype, "parseTimetable", [_dec4], Object.getOwnPropertyDescriptor(_class.prototype, "parseTimetable"), _class.prototype)), _class));
+  }), (0, _applyDecoratedDescriptor2.default)(_class.prototype, "changeChartOptions", [_dec2], Object.getOwnPropertyDescriptor(_class.prototype, "changeChartOptions"), _class.prototype), (0, _applyDecoratedDescriptor2.default)(_class.prototype, "deleteTimetable", [_dec3], Object.getOwnPropertyDescriptor(_class.prototype, "deleteTimetable"), _class.prototype), (0, _applyDecoratedDescriptor2.default)(_class.prototype, "parseTimetable", [_dec4], Object.getOwnPropertyDescriptor(_class.prototype, "parseTimetable"), _class.prototype), _descriptor3 = (0, _applyDecoratedDescriptor2.default)(_class.prototype, "incorrectLines", [_trackedBuiltIns.tracked], {
+    configurable: true,
+    enumerable: true,
+    writable: true,
+    initializer: function () {
+      return [];
+    }
+  })), _class));
   _exports.default = IndexController;
 });
 ;define("svo-aircraft-tetris/data-adapter", ["exports", "@ember-data/debug"], function (_exports, _debug) {
@@ -4053,8 +4109,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "RPeH9qiY",
-    "block": "{\"symbols\":[\"form\",\"form\"],\"statements\":[[1,[30,[36,0],[\"Index\"],null]],[2,\"\\n\"],[10,\"div\"],[14,0,\"container\"],[12],[2,\"\\n  \"],[10,\"h3\"],[12],[2,\"\\n    Timetable length\\n    \"],[1,[32,0,[\"data\",\"length\"]]],[2,\"\\n  \"],[13],[2,\"\\n  \"],[10,\"div\"],[14,0,\"row\"],[12],[2,\"\\n    \"],[10,\"div\"],[14,0,\"col-12\"],[12],[2,\"\\n      \"],[10,\"h3\"],[12],[2,\"\\n        Timetables\\n      \"],[13],[2,\"\\n      \"],[8,\"bs-form\",[],[[\"@formLayout\",\"@model\",\"@onSubmit\"],[\"vertical\",[32,0],[32,0,[\"parseTimetable\"]]]],[[\"default\"],[{\"statements\":[[2,\"\\n        \"],[11,\"button\"],[24,0,\"btn btn-primary\"],[4,[38,1],[\"click\",[32,0,[\"deleteTimetable\"]]],null],[12],[2,\"\\n          Delete timetable\\n        \"],[13],[2,\"\\n        \"],[8,[32,2,[\"element\"]],[],[[\"@controlType\",\"@label\",\"@property\"],[\"textarea\",\"Textarea\",\"timetableCSV\"]],null],[2,\"\\n        \"],[8,[32,2,[\"submitButton\"]],[],[[],[]],[[\"default\"],[{\"statements\":[[2,\"\\n          Parse timetable CSV\\n        \"]],\"parameters\":[]}]]],[2,\"\\n      \"]],\"parameters\":[2]}]]],[2,\"\\n      \"],[10,\"h3\"],[12],[2,\"\\n        Chart options\\n      \"],[13],[2,\"\\n      \"],[8,\"bs-form\",[],[[\"@formLayout\",\"@model\",\"@onSubmit\"],[\"vertical\",[32,0,[\"chartOptions\"]],[32,0,[\"changeChartOptions\"]]]],[[\"default\"],[{\"statements\":[[2,\"\\n        \"],[8,[32,1,[\"element\"]],[],[[\"@controlType\",\"@label\",\"@property\"],[\"input\",\"min Y\",\"minY\"]],null],[2,\"\\n        \"],[8,[32,1,[\"element\"]],[],[[\"@controlType\",\"@label\",\"@property\"],[\"input\",\"max Y\",\"maxY\"]],null],[2,\"\\n        \"],[8,[32,1,[\"element\"]],[],[[\"@controlType\",\"@label\",\"@property\"],[\"input\",\"min X\",\"minX\"]],null],[2,\"\\n        \"],[8,[32,1,[\"element\"]],[],[[\"@controlType\",\"@label\",\"@property\"],[\"input\",\"max X\",\"maxX\"]],null],[2,\"\\n        \"],[8,[32,1,[\"submitButton\"]],[],[[],[]],[[\"default\"],[{\"statements\":[[2,\"\\n          Change options\\n        \"]],\"parameters\":[]}]]],[2,\"\\n      \"]],\"parameters\":[1]}]]],[2,\"\\n      \"],[8,\"d3/timetable-chart\",[],[[\"@data\",\"@width\",\"@chartOptions\",\"@aspectRatio\"],[[30,[36,2],[1000,[32,0,[\"data\"]]],null],960,[30,[36,3],null,[[\"minY\",\"maxY\",\"minX\",\"maxX\"],[[32,0,[\"chartOptions\",\"minY\"]],[32,0,[\"chartOptions\",\"maxY\"]],[32,0,[\"chartOptions\",\"minX\"]],[32,0,[\"chartOptions\",\"maxX\"]]]]],0.6]],null],[2,\"\\n    \"],[13],[2,\"\\n    \"],[10,\"div\"],[14,0,\"col-12\"],[12],[2,\"\\n      \"],[8,\"models-table\",[],[[\"@data\",\"@columns\",\"@showComponentFooter\",\"@showColumnsDropdown\",\"@useFilteringByColumns\",\"@showGlobalFilter\",\"@doFilteringByHiddenColumns\",\"@useNumericPagination\",\"@filteringIgnoreCase\",\"@multipleColumnsSorting\",\"@showCurrentPageNumberSelect\",\"@collapseNumPaginationForPagesCount\",\"@showPageSize\"],[[32,0,[\"data\"]],[32,0,[\"columns\"]],[32,0,[\"showComponentFooter\"]],[32,0,[\"showColumnsDropdown\"]],[32,0,[\"useFilteringByColumns\"]],[32,0,[\"showGlobalFilter\"]],[32,0,[\"doFilteringByHiddenColumns\"]],[32,0,[\"useNumericPagination\"]],[32,0,[\"filteringIgnoreCase\"]],[32,0,[\"multipleColumnsSorting\"]],[32,0,[\"showCurrentPageNumberSelect\"]],[32,0,[\"collapseNumPaginationForPagesCount\"]],[32,0,[\"showPageSize\"]]]],null],[2,\"\\n    \"],[13],[2,\"\\n  \"],[13],[2,\"\\n\"],[13],[2,\"\\n\"],[1,[30,[36,5],[[30,[36,4],null,null]],null]]],\"hasEval\":false,\"upvars\":[\"page-title\",\"on\",\"take\",\"hash\",\"-outlet\",\"component\"]}",
+    "id": "pVaMbfR9",
+    "block": "{\"symbols\":[\"form\",\"incorrectStand\",\"intersectedLine\",\"form\"],\"statements\":[[1,[30,[36,5],[\"Index\"],null]],[2,\"\\n\"],[10,\"div\"],[14,0,\"container\"],[12],[2,\"\\n  \"],[10,\"h3\"],[12],[2,\"\\n    Timetable length\\n    \"],[1,[32,0,[\"data\",\"length\"]]],[2,\"\\n  \"],[13],[2,\"\\n  \"],[10,\"div\"],[14,0,\"row\"],[12],[2,\"\\n    \"],[10,\"div\"],[14,0,\"col-12\"],[12],[2,\"\\n      \"],[10,\"h3\"],[12],[2,\"\\n        Timetables\\n      \"],[13],[2,\"\\n      \"],[8,\"bs-form\",[],[[\"@formLayout\",\"@model\",\"@onSubmit\"],[\"vertical\",[32,0],[32,0,[\"parseTimetable\"]]]],[[\"default\"],[{\"statements\":[[2,\"\\n        \"],[11,\"button\"],[24,0,\"btn btn-primary\"],[4,[38,6],[\"click\",[32,0,[\"deleteTimetable\"]]],null],[12],[2,\"\\n          Delete timetable models\\n        \"],[13],[2,\"\\n        \"],[8,[32,4,[\"element\"]],[],[[\"@controlType\",\"@label\",\"@property\"],[\"textarea\",\"Textarea\",\"timetableCSV\"]],null],[2,\"\\n        \"],[8,[32,4,[\"submitButton\"]],[],[[],[]],[[\"default\"],[{\"statements\":[[2,\"\\n          Parse timetable CSV\\n        \"]],\"parameters\":[]}]]],[2,\"\\n      \"]],\"parameters\":[4]}]]],[2,\"\\n      \"],[10,\"div\"],[14,0,\"row\"],[12],[2,\"\\n        \"],[10,\"div\"],[14,0,\"col-12\"],[12],[2,\"\\n          Number of errors\\n          \"],[1,[32,0,[\"incorrectData\",\"length\"]]],[2,\"\\n        \"],[13],[2,\"\\n\"],[6,[37,1],[[30,[36,0],[[30,[36,0],[[30,[36,7],[200,[32,0,[\"incorrectData\"]]],null]],null]],null]],null,[[\"default\"],[{\"statements\":[[2,\"          \"],[10,\"div\"],[14,0,\"col-3\"],[12],[2,\"\\n            \"],[1,[32,2,[\"standId\"]]],[2,\"\\n          \"],[13],[2,\"\\n          \"],[10,\"div\"],[14,0,\"col-4\"],[12],[2,\"\\n\"],[6,[37,1],[[30,[36,0],[[30,[36,0],[[32,2,[\"lines\"]]],null]],null]],null,[[\"default\"],[{\"statements\":[[2,\"              \"],[10,\"div\"],[14,0,\"row\"],[12],[2,\"\\n                \"],[10,\"div\"],[14,0,\"col-6\"],[12],[2,\"\\n                  \"],[1,[32,3,[\"start\"]]],[2,\"\\n                \"],[13],[2,\"\\n                \"],[10,\"div\"],[14,0,\"col-6\"],[12],[2,\"\\n                  \"],[1,[32,3,[\"end\"]]],[2,\"\\n                \"],[13],[2,\"\\n              \"],[13],[2,\"\\n\"]],\"parameters\":[3]}]]],[2,\"          \"],[13],[2,\"\\n          \"],[10,\"div\"],[14,0,\"col-5\"],[12],[2,\"\\n            \"],[8,\"d3/timetable-chart\",[],[[\"@data\",\"@width\",\"@chartOptions\",\"@aspectRatio\"],[[32,2,[\"lines\"]],260,[30,[36,4],null,[[\"minY\",\"maxY\",\"minX\",\"maxX\"],[\"\",\"\",[30,[36,2],[[30,[36,2],[[30,[36,2],[[32,2],\"lines\"],null],0],null],\"start\"],null],[30,[36,2],[[30,[36,2],[[30,[36,3],[[30,[36,2],[[32,2],\"lines\"],null]],null],0],null],\"end\"],null]]]],0.6]],null],[2,\"\\n          \"],[13],[2,\"\\n\"]],\"parameters\":[2]}]]],[2,\"      \"],[13],[2,\"\\n      \"],[10,\"h3\"],[12],[2,\"\\n        Chart options\\n      \"],[13],[2,\"\\n      \"],[8,\"bs-form\",[],[[\"@formLayout\",\"@model\",\"@onSubmit\"],[\"vertical\",[32,0,[\"chartOptions\"]],[32,0,[\"changeChartOptions\"]]]],[[\"default\"],[{\"statements\":[[2,\"\\n        \"],[8,[32,1,[\"element\"]],[],[[\"@controlType\",\"@label\",\"@property\"],[\"input\",\"min Y\",\"minY\"]],null],[2,\"\\n        \"],[8,[32,1,[\"element\"]],[],[[\"@controlType\",\"@label\",\"@property\"],[\"input\",\"max Y\",\"maxY\"]],null],[2,\"\\n        \"],[8,[32,1,[\"element\"]],[],[[\"@controlType\",\"@label\",\"@property\"],[\"input\",\"min X\",\"minX\"]],null],[2,\"\\n        \"],[8,[32,1,[\"element\"]],[],[[\"@controlType\",\"@label\",\"@property\"],[\"input\",\"max X\",\"maxX\"]],null],[2,\"\\n        \"],[8,[32,1,[\"submitButton\"]],[],[[],[]],[[\"default\"],[{\"statements\":[[2,\"\\n          Change options\\n        \"]],\"parameters\":[]}]]],[2,\"\\n      \"]],\"parameters\":[1]}]]],[2,\"\\n      \"],[8,\"d3/timetable-chart\",[],[[\"@data\",\"@width\",\"@chartOptions\",\"@aspectRatio\"],[[32,0,[\"data\"]],960,[30,[36,4],null,[[\"minY\",\"maxY\",\"minX\",\"maxX\"],[[32,0,[\"chartOptions\",\"minY\"]],[32,0,[\"chartOptions\",\"maxY\"]],[32,0,[\"chartOptions\",\"minX\"]],[32,0,[\"chartOptions\",\"maxX\"]]]]],0.6]],null],[2,\"\\n    \"],[13],[2,\"\\n    \"],[10,\"div\"],[14,0,\"col-12\"],[12],[2,\"\\n      \"],[8,\"models-table\",[],[[\"@data\",\"@columns\",\"@showComponentFooter\",\"@showColumnsDropdown\",\"@useFilteringByColumns\",\"@showGlobalFilter\",\"@doFilteringByHiddenColumns\",\"@useNumericPagination\",\"@filteringIgnoreCase\",\"@multipleColumnsSorting\",\"@showCurrentPageNumberSelect\",\"@collapseNumPaginationForPagesCount\",\"@showPageSize\"],[[32,0,[\"data\"]],[32,0,[\"columns\"]],[32,0,[\"showComponentFooter\"]],[32,0,[\"showColumnsDropdown\"]],[32,0,[\"useFilteringByColumns\"]],[32,0,[\"showGlobalFilter\"]],[32,0,[\"doFilteringByHiddenColumns\"]],[32,0,[\"useNumericPagination\"]],[32,0,[\"filteringIgnoreCase\"]],[32,0,[\"multipleColumnsSorting\"]],[32,0,[\"showCurrentPageNumberSelect\"]],[32,0,[\"collapseNumPaginationForPagesCount\"]],[32,0,[\"showPageSize\"]]]],null],[2,\"\\n    \"],[13],[2,\"\\n  \"],[13],[2,\"\\n\"],[13],[2,\"\\n\"],[1,[30,[36,9],[[30,[36,8],null,null]],null]]],\"hasEval\":false,\"upvars\":[\"-track-array\",\"each\",\"get\",\"reverse\",\"hash\",\"page-title\",\"on\",\"take\",\"-outlet\",\"component\"]}",
     "moduleName": "svo-aircraft-tetris/templates/index.hbs"
   });
 
@@ -4239,7 +4295,7 @@ catch(err) {
 
 ;
           if (!runningTests) {
-            require("svo-aircraft-tetris/app")["default"].create({"name":"svo-aircraft-tetris","version":"0.0.0+1f492086"});
+            require("svo-aircraft-tetris/app")["default"].create({"name":"svo-aircraft-tetris","version":"0.0.0+97950b00"});
           }
         
 //# sourceMappingURL=svo-aircraft-tetris.map
