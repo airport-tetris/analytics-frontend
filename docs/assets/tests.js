@@ -72,6 +72,78 @@ define("svo-aircraft-tetris/tests/integration/components/d3/timetable-chart-test
     });
   });
 });
+define("svo-aircraft-tetris/tests/integration/components/emt/datetime-format-end-test", ["qunit", "ember-qunit", "@ember/test-helpers"], function (_qunit, _emberQunit, _testHelpers) {
+  "use strict";
+
+  (0, _qunit.module)('Integration | Component | emt/datetime-format-end', function (hooks) {
+    (0, _emberQunit.setupRenderingTest)(hooks);
+    (0, _qunit.test)('it renders', async function (assert) {
+      // Set any properties with this.set('myProperty', 'value');
+      // Handle any actions with this.set('myAction', function(val) { ... });
+      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      /*
+        <Emt::DatetimeFormatEnd />
+      */
+      {
+        "id": "46t1Frav",
+        "block": "{\"symbols\":[],\"statements\":[[8,\"emt/datetime-format-end\",[],[[],[]],null]],\"hasEval\":false,\"upvars\":[]}",
+        "moduleName": "(unknown template module)"
+      }));
+      assert.equal(this.element.textContent.trim(), ''); // Template block usage:
+
+      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      /*
+        
+            <Emt::DatetimeFormatEnd>
+              template block text
+            </Emt::DatetimeFormatEnd>
+          
+      */
+      {
+        "id": "RPJC51XI",
+        "block": "{\"symbols\":[],\"statements\":[[2,\"\\n      \"],[8,\"emt/datetime-format-end\",[],[[],[]],[[\"default\"],[{\"statements\":[[2,\"\\n        template block text\\n      \"]],\"parameters\":[]}]]],[2,\"\\n    \"]],\"hasEval\":false,\"upvars\":[]}",
+        "moduleName": "(unknown template module)"
+      }));
+      assert.equal(this.element.textContent.trim(), 'template block text');
+    });
+  });
+});
+define("svo-aircraft-tetris/tests/integration/components/emt/datetime-format-start-test", ["qunit", "ember-qunit", "@ember/test-helpers"], function (_qunit, _emberQunit, _testHelpers) {
+  "use strict";
+
+  (0, _qunit.module)('Integration | Component | emt/datetime-format-start', function (hooks) {
+    (0, _emberQunit.setupRenderingTest)(hooks);
+    (0, _qunit.test)('it renders', async function (assert) {
+      // Set any properties with this.set('myProperty', 'value');
+      // Handle any actions with this.set('myAction', function(val) { ... });
+      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      /*
+        <Emt::DatetimeFormatStart />
+      */
+      {
+        "id": "ZeEXf5L9",
+        "block": "{\"symbols\":[],\"statements\":[[8,\"emt/datetime-format-start\",[],[[],[]],null]],\"hasEval\":false,\"upvars\":[]}",
+        "moduleName": "(unknown template module)"
+      }));
+      assert.equal(this.element.textContent.trim(), ''); // Template block usage:
+
+      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      /*
+        
+            <Emt::DatetimeFormatStart>
+              template block text
+            </Emt::DatetimeFormatStart>
+          
+      */
+      {
+        "id": "GZQrGnKE",
+        "block": "{\"symbols\":[],\"statements\":[[2,\"\\n      \"],[8,\"emt/datetime-format-start\",[],[[],[]],[[\"default\"],[{\"statements\":[[2,\"\\n        template block text\\n      \"]],\"parameters\":[]}]]],[2,\"\\n    \"]],\"hasEval\":false,\"upvars\":[]}",
+        "moduleName": "(unknown template module)"
+      }));
+      assert.equal(this.element.textContent.trim(), 'template block text');
+    });
+  });
+});
 define("svo-aircraft-tetris/tests/integration/components/emt/expanded-line-test", ["qunit", "ember-qunit", "@ember/test-helpers"], function (_qunit, _emberQunit, _testHelpers) {
   "use strict";
 

@@ -10,8 +10,19 @@
         @model={{this}}
         @onSubmit={{this.parseTimetable}} as |form|
       >
-        <button class="btn btn-outline-primary" {{on 'click' this.deleteTimetable}}>
+        <button
+          type="button"
+          class="btn btn-outline-primary"
+          {{on 'click' this.deleteTimetable}}
+        >
           Delete timetable models
+        </button>
+        <button
+          type="button"
+          class="btn btn-outline-primary"
+          {{on 'click' this.calculateCosts}}
+        >
+          Calculate Costs {{this.calcCost}}
         </button>
         <form.element
           @controlType="textarea"
@@ -73,7 +84,10 @@
           {{/each}}
         {{/if}}
       </div>
-      <button class="btn btn-outline-primary" {{on 'click' this.toggleShowOptions}}>
+      <button
+        class="btn btn-outline-primary"
+        {{on 'click' this.toggleShowOptions}}
+      >
         Show/hide chart options
       </button>
       {{#if this.showChartOptions}}
@@ -103,10 +117,15 @@
             {{this.totalCost}}
           </p>
           <p>
-            Total Optimal cost
+            Total Optimal cost / via stands
             {{this.totalOptCost}}
+            /
+            {{this.totalOptCostsViaStands}}
           </p>
-          <p>Total utilisation {{this.totalStandsUtilization}}</p>
+          <p>
+            Total utilisation
+            {{this.totalStandsUtilization}}
+          </p>
           <p>
             Ratio
             {{this.optimalRatio}}

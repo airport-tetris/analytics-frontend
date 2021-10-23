@@ -1256,6 +1256,64 @@
     }
   });
 });
+;define("svo-aircraft-tetris/components/emt/datetime-format-end", ["exports", "@glimmer/component", "moment"], function (_exports, _component, _moment) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.default = void 0;
+
+  const __COLOCATED_TEMPLATE__ = Ember.HTMLBars.template(
+  /*
+    {{this.formatedDate}}
+  */
+  {
+    "id": "dO7aBQcr",
+    "block": "{\"symbols\":[],\"statements\":[[1,[32,0,[\"formatedDate\"]]]],\"hasEval\":false,\"upvars\":[]}",
+    "moduleName": "svo-aircraft-tetris/components/emt/datetime-format-end.hbs"
+  });
+
+  class EmtDatetimeFormatStartComponent extends _component.default {
+    get formatedDate() {
+      return (0, _moment.default)(this.args.record.end).format('DD HH:MM');
+    }
+
+  }
+
+  _exports.default = EmtDatetimeFormatStartComponent;
+
+  Ember._setComponentTemplate(__COLOCATED_TEMPLATE__, EmtDatetimeFormatStartComponent);
+});
+;define("svo-aircraft-tetris/components/emt/datetime-format-start", ["exports", "@glimmer/component", "moment"], function (_exports, _component, _moment) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.default = void 0;
+
+  const __COLOCATED_TEMPLATE__ = Ember.HTMLBars.template(
+  /*
+    {{this.formatedDate}}
+  */
+  {
+    "id": "4xKHCBQc",
+    "block": "{\"symbols\":[],\"statements\":[[1,[32,0,[\"formatedDate\"]]]],\"hasEval\":false,\"upvars\":[]}",
+    "moduleName": "svo-aircraft-tetris/components/emt/datetime-format-start.hbs"
+  });
+
+  class EmtDatetimeFormatStartComponent extends _component.default {
+    get formatedDate() {
+      return (0, _moment.default)(this.args.record.start).format('DD HH:MM');
+    }
+
+  }
+
+  _exports.default = EmtDatetimeFormatStartComponent;
+
+  Ember._setComponentTemplate(__COLOCATED_TEMPLATE__, EmtDatetimeFormatStartComponent);
+});
 ;define("svo-aircraft-tetris/components/emt/expanded-line", ["exports"], function (_exports) {
   "use strict";
 
@@ -2233,9 +2291,9 @@
   });
   _exports.default = void 0;
 
-  var _dec, _dec2, _dec3, _dec4, _dec5, _class, _descriptor, _descriptor2, _descriptor3, _descriptor4, _descriptor5, _descriptor6;
+  var _dec, _dec2, _dec3, _dec4, _dec5, _dec6, _class, _descriptor, _descriptor2, _descriptor3, _descriptor4, _descriptor5, _descriptor6, _descriptor7;
 
-  let IndexController = (_dec = Ember.inject.service, _dec2 = Ember._action, _dec3 = Ember._action, _dec4 = Ember._action, _dec5 = Ember._action, (_class = class IndexController extends Ember.Controller {
+  let IndexController = (_dec = Ember.inject.service, _dec2 = Ember._action, _dec3 = Ember._action, _dec4 = Ember._action, _dec5 = Ember._action, _dec6 = Ember._action, (_class = class IndexController extends Ember.Controller {
     constructor(...args) {
       super(...args);
       (0, _initializerDefineProperty2.default)(this, "data", _descriptor, this);
@@ -2245,14 +2303,22 @@
       (0, _defineProperty2.default)(this, "columns", [{
         propertyName: 'isArrival'
       }, {
-        propertyName: 'pseudoAcCode'
+        propertyName: 'pseudoAcCode',
+        isHidden: true
       }, {
         propertyName: 'start',
         sortFunction: function sortBefore(i1, i2) {
           return (0, _moment.default)(i1).diff(i2);
-        }
+        },
+        component: 'emt/datetime-format-start'
       }, {
-        propertyName: 'end'
+        propertyName: 'end',
+        sortFunction: function sortBefore(i1, i2) {
+          return (0, _moment.default)(i1).diff(i2);
+        },
+        component: 'emt/datetime-format-start'
+      }, {
+        propertyName: 'duration'
       }, {
         propertyName: 'airline',
         isHidden: true
@@ -2264,9 +2330,11 @@
       }, {
         propertyName: 'optCost'
       }, {
-        propertyName: 'airport'
+        propertyName: 'airport',
+        isHidden: true
       }, {
-        propertyName: 'pax'
+        propertyName: 'pax',
+        isHidden: true
       }, {
         propertyName: 'paxCapTotal',
         isHidden: true
@@ -2304,12 +2372,13 @@
       (0, _defineProperty2.default)(this, "chartOptions", (0, _trackedBuiltIns.tracked)({
         minY: '',
         maxY: '',
-        minX: '2019-05-17 00:00:00',
-        maxX: '2019-05-17 23:59:59'
+        minX: '2019-08-17 00:00:00',
+        maxX: '2019-08-17 23:59:59'
       }));
       (0, _initializerDefineProperty2.default)(this, "showErrors", _descriptor4, this);
       (0, _initializerDefineProperty2.default)(this, "showChartOptions", _descriptor5, this);
       (0, _initializerDefineProperty2.default)(this, "incorrectLines", _descriptor6, this);
+      (0, _initializerDefineProperty2.default)(this, "calcCost", _descriptor7, this);
     }
 
     get stands() {
@@ -2396,6 +2465,14 @@
       }, 0);
     }
 
+    get totalOptCostsViaStands() {
+      const optimalStands = this.model.optimalStands;
+      return Object.keys(optimalStands).reduce((prev, key) => {
+        prev = prev + optimalStands[key][0].Cost;
+        return prev;
+      }, 0);
+    }
+
     get optimalRatio() {
       return this.totalCost / this.totalOptCost;
     }
@@ -2467,6 +2544,33 @@
       this.showErrors = !this.showErrors;
     }
 
+    calculateCosts() {
+      const calcCost = this.data.reduce((prev, timeline) => {
+        const stand = this.model.stands[timeline.standId];
+        const isAway = stand['jetbridgeType'] === 'N';
+        const busRate = +this.model.rates['Bus_Cost_per_Minute'];
+        const busTime = calcTime(stand, timeline.terminalId);
+        const busCount = Math.ceil(+timeline.pax / 80);
+        const busCost = isAway ? busCount * busTime * busRate : 0;
+        const standRate = isAway ? +this.model.rates['Away_Aircraft_Stand_Cost_per_Minute'] : +this.model.rates['JetBridge_Aircraft_Stand_Cost_per_Minute'];
+        const standTime = this.model.times[timeline.airClass][isAway ? 'awayTime' : 'jbTime'];
+        const standCost = standRate * standTime;
+        const taxiingRate = this.model.rates['Aircraft_Taxiing_Cost_per_Minute'];
+        const taxiingTime = +stand['taxiingTime'];
+        const taxiingCost = taxiingRate * taxiingTime;
+        const totalCost = busCost + taxiingCost + standCost;
+        prev = prev + totalCost;
+        return prev;
+      }, 0);
+      this.calcCost = calcCost;
+    } //   Bus_Nums.append(math.ceil(TimeTable.flight_PAX[i] / 80))
+    //     Bus_Costs.append(
+    //         (TimeTable.JB[i] == 'Away') * TimeTable.Bus_Time[i] * Price_.loc['Bus_Cost_per_Minute'].Rate * Bus_Nums[i])
+    //     Parking_Costs.append(((np.isnan(TimeTable.Terminal[i]) == True) * Price_.loc['Away_Aircraft_Stand_Cost_per_Minute'].Rate + (np.isnan(TimeTable.Terminal[i]) != True) * Price_.loc['JetBridge_Aircraft_Stand_Cost_per_Minute'].Rate) * TimeTable.Handling_Time[i])
+    //     Taxing_Costs.append(TimeTable.Taxiing_Time[i] * Price_.loc['Aircraft_Taxiing_Cost_per_Minute'].Rate)
+    // Total_Сosts = [x + y + z for x, y, z in zip(Bus_Costs, Parking_Costs, Taxing_Costs)]
+
+
   }, (_descriptor = (0, _applyDecoratedDescriptor2.default)(_class.prototype, "data", [_trackedBuiltIns.tracked], {
     configurable: true,
     enumerable: true,
@@ -2505,88 +2609,80 @@
     initializer: function () {
       return [];
     }
-  }), (0, _applyDecoratedDescriptor2.default)(_class.prototype, "toggleShowOptions", [_dec2], Object.getOwnPropertyDescriptor(_class.prototype, "toggleShowOptions"), _class.prototype), (0, _applyDecoratedDescriptor2.default)(_class.prototype, "deleteTimetable", [_dec3], Object.getOwnPropertyDescriptor(_class.prototype, "deleteTimetable"), _class.prototype), (0, _applyDecoratedDescriptor2.default)(_class.prototype, "parseTimetable", [_dec4], Object.getOwnPropertyDescriptor(_class.prototype, "parseTimetable"), _class.prototype), (0, _applyDecoratedDescriptor2.default)(_class.prototype, "toggleShowErrors", [_dec5], Object.getOwnPropertyDescriptor(_class.prototype, "toggleShowErrors"), _class.prototype)), _class));
+  }), _descriptor7 = (0, _applyDecoratedDescriptor2.default)(_class.prototype, "calcCost", [_trackedBuiltIns.tracked], {
+    configurable: true,
+    enumerable: true,
+    writable: true,
+    initializer: function () {
+      return 0;
+    }
+  }), (0, _applyDecoratedDescriptor2.default)(_class.prototype, "toggleShowOptions", [_dec2], Object.getOwnPropertyDescriptor(_class.prototype, "toggleShowOptions"), _class.prototype), (0, _applyDecoratedDescriptor2.default)(_class.prototype, "deleteTimetable", [_dec3], Object.getOwnPropertyDescriptor(_class.prototype, "deleteTimetable"), _class.prototype), (0, _applyDecoratedDescriptor2.default)(_class.prototype, "parseTimetable", [_dec4], Object.getOwnPropertyDescriptor(_class.prototype, "parseTimetable"), _class.prototype), (0, _applyDecoratedDescriptor2.default)(_class.prototype, "toggleShowErrors", [_dec5], Object.getOwnPropertyDescriptor(_class.prototype, "toggleShowErrors"), _class.prototype), (0, _applyDecoratedDescriptor2.default)(_class.prototype, "calculateCosts", [_dec6], Object.getOwnPropertyDescriptor(_class.prototype, "calculateCosts"), _class.prototype)), _class));
   _exports.default = IndexController;
+
+  function calcTime(stand, terminal) {
+    return Number(stand[`timeToTerminal${terminal}`]);
+  }
+
   const defaultCSV = `,flight_AD,flight_datetime,flight_AL_Synchron_code,flight_number,flight_ID,flight_AP,flight_AC_Synchron_code,flight_AC_PAX_capacity_total,flight_PAX,Aircraft_Stand,flight_terminal,empty_spaces,air_classes,count_date,opt_mc,opt_min_cost_value,type_mc,flight_datetime_start,flight_datetime_finish,C_vc,index
-0,A,2019-05-17 11:05:00,U6,1,D,SVX,320,160,130,1,3,30,Narrow_Body,3,1,1600,away,2019-05-17 11:10:00,2019-05-17 12:15:00,1600,0
-1,D,2019-05-17 07:15:00,SU,1320,D,MMK,32A,158,78,86,1,80,Narrow_Body,6,86,1550,away,2019-05-17 06:05:00,2019-05-17 07:10:00,1550,433
-2,A,2019-05-17 12:55:00,SU,1321,D,MMK,32A,158,156,86,1,2,Narrow_Body,2,86,1750,away,2019-05-17 13:00:00,2019-05-17 14:05:00,1750,434
-3,D,2019-05-17 23:20:00,SU,1322,D,MMK,32A,158,60,86,1,98,Narrow_Body,2,86,1550,away,2019-05-17 22:10:00,2019-05-17 23:15:00,1550,435
-4,A,2019-05-17 05:10:00,SU,1323,D,MMK,32A,158,127,87,1,31,Narrow_Body,1,86,1750,away,2019-05-17 05:15:00,2019-05-17 06:20:00,1750,436
-5,D,2019-05-17 15:10:00,SU,1324,D,MMK,32A,158,136,87,1,22,Narrow_Body,6,86,1750,away,2019-05-17 14:00:00,2019-05-17 15:05:00,1750,437
-6,A,2019-05-17 21:05:00,SU,1325,D,MMK,32A,158,127,87,1,31,Narrow_Body,3,86,1750,away,2019-05-17 21:10:00,2019-05-17 22:15:00,1750,438
-7,D,2019-05-17 16:20:00,SU,1330,D,ARH,SU9,87,85,86,1,2,Regional,3,86,1450,away,2019-05-17 15:25:00,2019-05-17 16:15:00,1450,439
-8,A,2019-05-17 04:55:00,SU,1315,D,MRV,SU9,87,63,86,1,24,Regional,3,86,1250,away,2019-05-17 05:00:00,2019-05-17 05:50:00,1250,432
-9,D,2019-05-17 08:10:00,SU,1332,D,ARH,SU9,87,70,86,1,17,Regional,4,86,1250,away,2019-05-17 07:15:00,2019-05-17 08:05:00,1250,440
-10,D,2019-05-17 00:05:00,SU,1334,D,ARH,SU9,87,72,86,1,15,Regional,4,86,1250,away,2019-05-16 23:10:00,2019-05-17 00:00:00,1250,442
-11,A,2019-05-17 04:50:00,SU,1335,D,ARH,SU9,87,72,88,1,15,Regional,4,86,1250,away,2019-05-17 04:55:00,2019-05-17 05:45:00,1250,443
-12,D,2019-05-17 18:30:00,SU,1338,D,ARH,SU9,87,66,86,1,21,Regional,5,86,1250,away,2019-05-17 17:35:00,2019-05-17 18:25:00,1250,444
-13,A,2019-05-17 23:45:00,SU,1339,D,ARH,SU9,87,70,86,1,17,Regional,6,86,1250,away,2019-05-17 23:50:00,2019-05-18 00:40:00,1250,445
-14,D,2019-05-17 20:25:00,SU,1340,D,GOJ,32A,158,143,86,1,15,Narrow_Body,5,86,1750,away,2019-05-17 19:15:00,2019-05-17 20:20:00,1750,446
-15,A,2019-05-17 23:45:00,SU,1341,D,GOJ,32A,158,50,87,1,108,Narrow_Body,6,86,1550,away,2019-05-17 23:50:00,2019-05-18 00:55:00,1550,447
-16,D,2019-05-17 08:55:00,SU,1350,D,VOZ,SU9,87,82,87,1,5,Regional,6,86,1450,away,2019-05-17 08:00:00,2019-05-17 08:50:00,1450,448
-17,A,2019-05-17 13:00:00,SU,1333,D,ARH,SU9,87,74,87,1,13,Regional,4,86,1250,away,2019-05-17 13:05:00,2019-05-17 13:55:00,1250,441
-18,D,2019-05-17 20:55:00,SU,1314,D,MRV,73H,158,137,87,1,21,Narrow_Body,6,86,1750,away,2019-05-17 19:45:00,2019-05-17 20:50:00,1750,431
-19,A,2019-05-17 19:45:00,SU,1313,D,MRV,73H,158,116,88,1,42,Narrow_Body,5,86,1750,away,2019-05-17 19:50:00,2019-05-17 20:55:00,1750,430
-20,D,2019-05-17 13:55:00,SU,1312,D,MRV,73H,158,112,88,1,46,Narrow_Body,5,86,1750,away,2019-05-17 12:45:00,2019-05-17 13:50:00,1750,429
-21,A,2019-05-17 15:00:00,SU,1287,D,ULV,SU9,87,71,88,1,16,Regional,5,86,1250,away,2019-05-17 15:05:00,2019-05-17 15:55:00,1250,412
-22,D,2019-05-17 01:50:00,SU,1288,D,ULV,SU9,87,72,86,1,15,Regional,3,86,1250,away,2019-05-17 00:55:00,2019-05-17 01:45:00,1250,413
-23,A,2019-05-17 06:55:00,SU,1289,D,ULV,SU9,87,76,87,1,11,Regional,4,86,1250,away,2019-05-17 07:00:00,2019-05-17 07:50:00,1250,414
-24,D,2019-05-17 16:55:00,SU,1292,D,IJK,SU9,87,77,87,1,10,Regional,4,86,1250,away,2019-05-17 16:00:00,2019-05-17 16:50:00,1250,415
-25,A,2019-05-17 21:50:00,SU,1293,D,IJK,SU9,87,81,88,1,6,Regional,6,86,1450,away,2019-05-17 21:55:00,2019-05-17 22:45:00,1450,416
-26,D,2019-05-17 23:25:00,SU,1294,D,IJK,SU9,87,78,87,1,9,Regional,6,86,1250,away,2019-05-17 22:30:00,2019-05-17 23:20:00,1250,417
-27,A,2019-05-17 04:20:00,SU,1295,D,IJK,SU9,87,74,89,1,13,Regional,3,86,1250,away,2019-05-17 04:25:00,2019-05-17 05:15:00,1250,418
-28,D,2019-05-17 07:40:00,SU,1296,D,IJK,SU9,87,82,88,1,5,Regional,6,86,1450,away,2019-05-17 06:45:00,2019-05-17 07:35:00,1450,419
-29,A,2019-05-17 12:45:00,SU,1297,D,IJK,SU9,87,76,89,1,11,Regional,2,86,1250,away,2019-05-17 12:50:00,2019-05-17 13:40:00,1250,420
-30,D,2019-05-17 01:25:00,SU,1300,D,MRV,SU9,87,63,87,1,24,Regional,3,86,1250,away,2019-05-17 00:30:00,2019-05-17 01:20:00,1250,421
-31,A,2019-05-17 09:35:00,SU,1301,D,MRV,SU9,87,71,86,1,16,Regional,6,86,1250,away,2019-05-17 09:40:00,2019-05-17 10:30:00,1250,422
-32,D,2019-05-17 16:30:00,SU,1302,D,MRV,73H,158,132,89,1,26,Narrow_Body,5,86,1750,away,2019-05-17 15:20:00,2019-05-17 16:25:00,1750,423
-33,A,2019-05-17 22:15:00,SU,1303,D,MRV,73H,158,120,89,1,38,Narrow_Body,5,86,1750,away,2019-05-17 22:20:00,2019-05-17 23:25:00,1750,424
-34,D,2019-05-17 07:45:00,SU,1304,D,MRV,32A,158,97,89,1,61,Narrow_Body,7,86,1750,away,2019-05-17 06:35:00,2019-05-17 07:40:00,1750,425
-35,A,2019-05-17 13:30:00,SU,1305,D,MRV,32A,158,113,90,1,45,Narrow_Body,5,86,1750,away,2019-05-17 13:35:00,2019-05-17 14:40:00,1750,426
-36,D,2019-05-17 01:05:00,SU,1306,D,OVB,73H,158,127,88,1,31,Narrow_Body,2,86,1750,away,2019-05-16 23:55:00,2019-05-17 01:00:00,1750,427
-37,A,2019-05-17 10:25:00,SU,1307,D,OVB,73H,158,146,87,1,12,Narrow_Body,4,86,1750,away,2019-05-17 10:30:00,2019-05-17 11:35:00,1750,428
-38,A,2019-05-17 12:20:00,SU,1351,D,VOZ,SU9,87,80,90,1,7,Regional,4,86,1250,away,2019-05-17 12:25:00,2019-05-17 13:15:00,1250,449
-39,D,2019-05-17 10:45:00,SU,1286,D,ULV,SU9,87,46,88,1,41,Regional,3,86,1250,away,2019-05-17 09:50:00,2019-05-17 10:40:00,1250,411
-40,D,2019-05-17 23:50:00,SU,1352,D,VOZ,SU9,87,78,88,1,9,Regional,7,86,1250,away,2019-05-17 22:55:00,2019-05-17 23:45:00,1250,450
-41,D,2019-05-17 06:35:00,SU,1356,D,RTW,SU9,87,47,89,1,40,Regional,3,86,1250,away,2019-05-17 05:40:00,2019-05-17 06:30:00,1250,452
-42,D,2019-05-17 13:55:00,SU,1388,D,ULV,SU9,87,50,190,1,37,Regional,5,86,1250,away,2019-05-17 13:00:00,2019-05-17 13:50:00,1250,474
-43,A,2019-05-17 18:05:00,SU,1389,D,ULV,SU9,87,77,87,1,10,Regional,5,86,1250,away,2019-05-17 18:10:00,2019-05-17 19:00:00,1250,475
-44,D,2019-05-17 08:40:00,SU,1390,D,SCW,SU9,87,82,88,1,5,Regional,4,86,1450,away,2019-05-17 07:45:00,2019-05-17 08:35:00,1450,476
-45,A,2019-05-17 13:50:00,SU,1391,D,SCW,SU9,87,81,88,1,6,Regional,4,86,1450,away,2019-05-17 13:55:00,2019-05-17 14:45:00,1450,477
-46,D,2019-05-17 12:50:00,SU,1392,D,PEE,SU9,87,67,86,1,20,Regional,4,86,1250,away,2019-05-17 11:55:00,2019-05-17 12:45:00,1250,478
-47,A,2019-05-17 22:15:00,SU,1393,D,PEE,SU9,87,70,90,1,17,Regional,5,86,1250,away,2019-05-17 22:20:00,2019-05-17 23:10:00,1250,479
-48,D,2019-05-17 22:20:00,SU,1394,D,PEE,32A,158,151,89,1,7,Narrow_Body,6,86,1750,away,2019-05-17 21:10:00,2019-05-17 22:15:00,1750,480
-49,A,2019-05-17 08:05:00,SU,1383,D,HMA,32A,158,144,86,1,14,Narrow_Body,6,86,1750,away,2019-05-17 08:10:00,2019-05-17 09:15:00,1750,473
-50,A,2019-05-17 08:00:00,SU,1395,D,PEE,32A,158,132,89,1,26,Narrow_Body,4,86,1750,away,2019-05-17 08:05:00,2019-05-17 09:10:00,1750,481
-51,A,2019-05-17 04:35:00,SU,1397,D,SCW,SU9,87,80,90,1,7,Regional,2,86,1250,away,2019-05-17 04:40:00,2019-05-17 05:30:00,1250,483
-52,D,2019-05-17 08:30:00,SU,1400,D,SVX,32A,158,104,90,1,54,Narrow_Body,4,86,1750,away,2019-05-17 07:20:00,2019-05-17 08:25:00,1750,484
-53,A,2019-05-17 14:30:00,SU,1401,D,SVX,32A,158,144,104,1,14,Narrow_Body,4,86,1750,away,2019-05-17 14:40:00,2019-05-17 15:45:00,1750,485
-54,D,2019-05-17 11:20:00,SU,1402,D,SVX,73H,158,114,89,1,44,Narrow_Body,4,86,1750,away,2019-05-17 10:10:00,2019-05-17 11:15:00,1750,486
-55,A,2019-05-17 17:30:00,SU,1403,D,SVX,73H,158,132,88,1,26,Narrow_Body,5,86,1750,away,2019-05-17 17:35:00,2019-05-17 18:40:00,1750,487
-56,D,2019-05-17 15:20:00,SU,1404,D,SVX,32A,158,135,86,1,23,Narrow_Body,3,86,1750,away,2019-05-17 14:10:00,2019-05-17 15:15:00,1750,488
-57,A,2019-05-17 21:35:00,SU,1405,D,SVX,32A,158,134,104,1,24,Narrow_Body,5,86,1750,away,2019-05-17 21:45:00,2019-05-17 22:50:00,1750,489
-58,D,2019-05-17 22:40:00,SU,1396,D,SCW,32A,158,103,105,1,55,Narrow_Body,3,86,1750,away,2019-05-17 21:25:00,2019-05-17 22:30:00,1750,482
-59,D,2019-05-17 01:00:00,SU,1382,D,HMA,32A,158,98,89,1,60,Narrow_Body,3,86,1750,away,2019-05-16 23:50:00,2019-05-17 00:55:00,1750,472
-60,A,2019-05-17 23:35:00,SU,1375,D,EGO,SU9,87,77,89,1,10,Regional,7,86,1250,away,2019-05-17 23:40:00,2019-05-18 00:30:00,1250,471
-61,D,2019-05-17 19:40:00,SU,1374,D,EGO,SU9,87,79,88,1,8,Regional,4,86,1250,away,2019-05-17 18:45:00,2019-05-17 19:35:00,1250,470
-62,A,2019-05-17 11:10:00,SU,1357,D,RTW,SU9,87,66,88,1,21,Regional,1,86,1250,away,2019-05-17 11:15:00,2019-05-17 12:05:00,1250,453
-63,D,2019-05-17 19:15:00,SU,1358,D,RTW,SU9,87,71,89,1,16,Regional,5,86,1250,away,2019-05-17 18:20:00,2019-05-17 19:10:00,1250,454
-64,A,2019-05-17 23:35:00,SU,1359,D,RTW,SU9,87,68,90,1,19,Regional,7,86,1250,away,2019-05-17 23:40:00,2019-05-18 00:30:00,1250,455
-65,D,2019-05-17 09:45:00,SU,1360,D,RTW,SU9,87,54,88,1,33,Regional,5,86,1250,away,2019-05-17 08:50:00,2019-05-17 09:40:00,1250,456
-66,A,2019-05-17 14:05:00,SU,1361,D,RTW,SU9,87,72,89,1,15,Regional,4,86,1250,away,2019-05-17 14:10:00,2019-05-17 15:00:00,1250,457
-67,D,2019-05-17 16:40:00,SU,1362,D,RTW,SU9,87,79,90,1,8,Regional,5,86,1250,away,2019-05-17 15:45:00,2019-05-17 16:35:00,1250,458
-68,A,2019-05-17 21:05:00,SU,1363,D,RTW,SU9,87,82,86,1,5,Regional,3,86,1450,away,2019-05-17 21:10:00,2019-05-17 22:00:00,1450,459
-69,D,2019-05-17 17:45:00,SU,1364,D,STW,SU9,87,72,89,1,15,Regional,5,86,1250,away,2019-05-17 16:50:00,2019-05-17 17:40:00,1250,460
-70,A,2019-05-17 23:15:00,SU,1365,D,STW,SU9,87,81,104,1,6,Regional,4,86,1450,away,2019-05-17 23:25:00,2019-05-18 00:15:00,1450,461
-71,D,2019-05-17 09:00:00,SU,1366,D,STW,SU9,87,80,190,1,7,Regional,5,86,1250,away,2019-05-17 08:05:00,2019-05-17 08:55:00,1250,462
-72,A,2019-05-17 14:25:00,SU,1367,D,STW,SU9,87,71,190,1,16,Regional,4,86,1250,away,2019-05-17 14:30:00,2019-05-17 15:20:00,1250,463
-73,D,2019-05-17 21:10:00,SU,1368,D,STW,SU9,87,77,89,1,10,Regional,3,86,1250,away,2019-05-17 20:15:00,2019-05-17 21:05:00,1250,464
-74,A,2019-05-17 05:15:00,SU,1369,D,STW,SU9,87,34,190,1,53,Regional,2,86,1250,away,2019-05-17 05:20:00,2019-05-17 06:10:00,1250,465
-75,D,2019-05-17 10:25:00,SU,1370,D,EGO,SU9,87,77,87,1,10,Regional,4,86,1250,away,2019-05-17 09:30:00,2019-05-17 10:20:00,1250,466
-76,A,2019-05-17 14:20:00,SU,1371,D,EGO,SU9,87,74,191,1,13,Regional,4,86,1250,away,2019-05-17 14:25:00,2019-05-17 15:15:00,1250,467
-77,D,2019-05-17 23:55:00,SU,1372,D,EGO,SU9,87,75,190,1,12,Regional,5,86,1250,away,2019-05-17 23:00:00,2019-05-17 23:50:00,1250,468
-78,A,2019-05-17 04:10:00,SU,1373,D,EGO,SU9,87,35,87,1,52,Regional,3,86,1250,away,2019-05-17 04:15:00,2019-05-17 05:05:00,1250,469`;
+0,D,2019-08-17 02:00:00,SU,1188,D,VOG,73H,158,151,205,1,7,Narrow_Body,1,205,2095,away,2019-08-17 00:50:00,2019-08-17 01:55:00,2095,247
+1,D,2019-08-17 02:40:00,SU,1300,D,MRV,32A,158,139,217,1,19,Narrow_Body,1,205,2095,away,2019-08-17 01:30:00,2019-08-17 02:35:00,2095,292
+2,D,2019-08-17 02:30:00,N4,1801,I,AYT,77W,486,389,48,2,97,Wide_Body,1,48,3610,jetbridge,2019-08-17 01:10:00,2019-08-17 02:10:00,3610,884
+3,D,2019-08-17 07:55:00,SU,2306,I,FRA,32B,183,178,10,3,5,Narrow_Body,1,10,2095,away,2019-08-17 06:45:00,2019-08-17 07:50:00,2095,815
+4,D,2019-08-17 01:40:00,SU,1234,D,UFA,32A,158,149,190,1,9,Narrow_Body,1,205,2095,away,2019-08-17 00:29:00,2019-08-17 01:34:00,2125,272
+5,D,2019-08-17 03:50:00,RL,7743,I,BCN,763,330,330,48,2,0,Wide_Body,1,48,3250,jetbridge,2019-08-17 02:30:00,2019-08-17 03:30:00,3250,899
+6,D,2019-08-17 01:20:00,SU,1632,D,SIP,32A,158,127,217,1,31,Narrow_Body,1,205,2095,away,2019-08-17 00:10:00,2019-08-17 01:15:00,2095,402
+7,D,2019-08-17 02:55:00,SU,1674,D,ROV,320,140,86,10,3,54,Narrow_Body,1,10,1915,away,2019-08-17 01:45:00,2019-08-17 02:50:00,1915,916
+8,A,2019-08-17 03:55:00,SU,2619,I,BRU,32A,158,114,10,5,44,Narrow_Body,1,10,2095,away,2019-08-17 04:00:00,2019-08-17 05:05:00,2095,546
+9,A,2019-08-17 02:35:00,SU,2305,I,FRA,320,140,112,11,3,28,Narrow_Body,1,10,1915,away,2019-08-17 02:41:00,2019-08-17 03:46:00,1945,942
+10,A,2019-08-17 05:20:00,SU,1129,D,AER,73H,158,157,205,1,1,Narrow_Body,1,205,2095,away,2019-08-17 05:25:00,2019-08-17 06:30:00,2095,216
+11,D,2019-08-17 02:05:00,SU,1864,I,EVN,32A,158,136,11,3,22,Narrow_Body,1,10,1915,away,2019-08-17 00:54:00,2019-08-17 01:59:00,1945,432
+12,A,2019-08-17 00:15:00,SU,1897,I,EVN,32B,183,147,10,3,36,Narrow_Body,1,10,2095,away,2019-08-17 00:20:00,2019-08-17 01:25:00,2095,783
+13,A,2019-08-17 03:25:00,JU,656,I,BEG,319,138,115,1,5,23,Narrow_Body,1,10,2095,away,2019-08-17 03:30:00,2019-08-17 04:35:00,2140,1024
+14,A,2019-08-17 03:35:00,SU,2497,I,CPH,73H,158,121,34,5,37,Narrow_Body,1,10,2095,jetbridge,2019-08-17 03:50:00,2019-08-17 04:40:00,2215,528
+15,A,2019-08-17 03:45:00,AZ,596,I,FCO,320,180,129,39,5,51,Narrow_Body,1,29,2380,jetbridge,2019-08-17 04:01:00,2019-08-17 04:51:00,2425,1005
+16,A,2019-08-17 03:20:00,KM,560,I,MLA,320,180,139,40,5,41,Narrow_Body,1,29,2380,jetbridge,2019-08-17 03:37:00,2019-08-17 04:27:00,2455,1002
+17,D,2019-08-17 11:30:00,SU,16,D,LED,73H,158,136,205,1,22,Narrow_Body,1,205,2095,away,2019-08-17 10:20:00,2019-08-17 11:25:00,2095,134
+18,D,2019-08-17 00:30:00,EO,563,D,OSW,E90,110,64,11,3,46,Regional,1,10,1570,away,2019-08-16 23:34:00,2019-08-17 00:24:00,1600,750
+19,A,2019-08-17 11:35:00,EO,228,D,VOG,E90,110,88,10,3,22,Regional,1,10,1570,away,2019-08-17 11:40:00,2019-08-17 12:30:00,1570,741
+20,A,2019-08-17 05:10:00,SU,1323,D,MMK,32A,158,146,217,1,12,Narrow_Body,1,205,2095,away,2019-08-17 05:15:00,2019-08-17 06:20:00,2095,303
+21,A,2019-08-17 02:45:00,FV,6152,D,SIP,77W,457,454,16,3,3,Wide_Body,1,10,2980,jetbridge,2019-08-17 02:56:00,2019-08-17 03:56:00,2995,1074
+22,A,2019-08-17 03:15:00,SU,2595,I,MUC,320,140,134,8,3,6,Narrow_Body,1,10,1915,away,2019-08-17 03:24:00,2019-08-17 04:29:00,2080,987
+23,A,2019-08-17 00:20:00,SU,1427,D,CEK,32A,158,155,191,1,3,Narrow_Body,1,205,2095,away,2019-08-17 00:26:00,2019-08-17 01:31:00,2125,331
+24,A,2019-08-17 11:15:00,RL,7544,I,DLM,752,224,220,77,2,4,Wide_Body,1,77,2830,away,2019-08-17 11:23:00,2019-08-17 12:43:00,2830,1090
+25,D,2019-08-17 03:30:00,RL,7701,I,AYT,77W,492,490,55,2,2,Wide_Body,1,48,3610,jetbridge,2019-08-17 02:09:00,2019-08-17 03:09:00,3640,1082
+26,A,2019-08-17 11:10:00,SU,1357,D,RTW,SU9,87,82,217,1,5,Regional,2,205,1750,away,2019-08-17 11:15:00,2019-08-17 12:05:00,1750,55
+27,A,2019-08-17 04:15:00,SU,2475,I,NCE,320,140,125,2,5,15,Narrow_Body,2,10,2095,away,2019-08-17 04:20:00,2019-08-17 05:25:00,2230,977
+28,A,2019-08-17 04:15:00,SU,2453,I,CDG,321,170,134,11,3,36,Narrow_Body,2,10,2095,away,2019-08-17 04:21:00,2019-08-17 05:26:00,2125,859
+29,A,2019-08-17 05:30:00,JD,475,I,HGH,332,264,242,48,2,22,Wide_Body,2,48,3070,jetbridge,2019-08-17 05:50:00,2019-08-17 06:50:00,3070,896
+30,A,2019-08-17 15:40:00,SU,2185,I,VIE,32B,183,178,10,5,5,Narrow_Body,2,29,2380,away,2019-08-17 15:45:00,2019-08-17 16:50:00,2395,812
+31,A,2019-08-17 22:30:00,N4,134,D,SIP,73H,189,152,10,3,37,Narrow_Body,2,10,2095,away,2019-08-17 22:35:00,2019-08-17 23:40:00,2095,637
+32,A,2019-08-17 04:00:00,SU,2423,I,VCE,320,140,124,3,3,16,Narrow_Body,2,10,1915,away,2019-08-17 04:08:00,2019-08-17 05:13:00,2095,970
+33,D,2019-08-17 00:50:00,RL,7745,I,PMI,738,189,188,77,2,1,Narrow_Body,2,77,2485,away,2019-08-16 23:37:00,2019-08-17 00:42:00,2485,711
+34,A,2019-08-17 05:30:00,N4,730,D,REN,73H,189,166,10,3,23,Narrow_Body,2,10,2095,away,2019-08-17 05:35:00,2019-08-17 06:40:00,2095,674
+35,A,2019-08-17 12:35:00,SU,1201,D,PEE,32A,158,155,205,1,3,Narrow_Body,2,205,2095,away,2019-08-17 12:40:00,2019-08-17 13:45:00,2095,255
+36,D,2019-08-17 00:50:00,RL,7537,I,LCA,738,189,152,78,2,37,Narrow_Body,2,77,2485,away,2019-08-16 23:39:00,2019-08-17 00:44:00,2500,708
+37,A,2019-08-17 12:35:00,KL,901,I,AMS,73W,142,131,10,5,11,Narrow_Body,2,10,2095,away,2019-08-17 12:40:00,2019-08-17 13:45:00,2095,1040
+38,A,2019-08-17 12:45:00,SU,1421,D,CEK,32A,158,150,217,1,8,Narrow_Body,2,205,2095,away,2019-08-17 12:50:00,2019-08-17 13:55:00,2095,325
+39,A,2019-08-17 05:55:00,SU,1845,I,KIV,320,140,112,11,3,28,Narrow_Body,2,10,1915,away,2019-08-17 06:01:00,2019-08-17 07:06:00,1945,918
+40,D,2019-08-17 11:50:00,SU,2100,I,RIX,SU9,87,83,11,3,4,Regional,2,10,1570,away,2019-08-17 10:54:00,2019-08-17 11:44:00,1600,114
+41,A,2019-08-17 17:10:00,SU,2091,I,BEG,320,140,127,78,2,13,Narrow_Body,2,78,2170,away,2019-08-17 17:16:00,2019-08-17 18:21:00,2170,929
+42,A,2019-08-17 04:40:00,SU,2405,I,FCO,320,140,119,1,3,21,Narrow_Body,2,10,1915,away,2019-08-17 04:45:00,2019-08-17 05:50:00,1960,961
+43,A,2019-08-17 04:35:00,SU,1397,D,SCW,SU9,87,70,190,1,17,Regional,2,205,1750,away,2019-08-17 04:41:00,2019-08-17 05:31:00,1780,85
+44,D,2019-08-17 12:10:00,EO,453,I,CAN,763,290,232,48,2,58,Wide_Body,2,48,3070,jetbridge,2019-08-17 10:50:00,2019-08-17 11:50:00,3070,872
+45,D,2019-08-17 09:10:00,SU,1460,D,OVB,73H,158,147,205,1,11,Narrow_Body,2,205,2095,away,2019-08-17 08:00:00,2019-08-17 09:05:00,2095,346
+46,D,2019-08-17 00:35:00,SU,1132,D,AER,SU9,87,82,205,1,5,Regional,2,205,1750,away,2019-08-16 23:40:00,2019-08-17 00:30:00,1750,11
+47,A,2019-08-17 11:10:00,SU,1943,I,ALA,32B,183,182,78,2,1,Narrow_Body,2,77,2485,away,2019-08-17 11:16:00,2019-08-17 12:21:00,2500,786
+48,A,2019-08-17 00:35:00,SU,2535,I,OSL,73H,158,93,1,3,65,Narrow_Body,2,10,1915,away,2019-08-17 00:40:00,2019-08-17 01:45:00,1960,536
+49,A,2019-08-17 05:55:00,SU,513,I,IKA,32A,158,147,78,2,11,Narrow_Body,2,78,2170,away,2019-08-17 06:01:00,2019-08-17 07:06:00,2170,168
+50,D,2019-08-17 11:55:00,U6,439,D,SVX,320,160,159,190,1,1,Narrow_Body,2,205,2095,away,2019-08-17 10:44:00,2019-08-17 11:49:00,2125,2
+51,A,2019-08-17 04:35:00,SU,2093,I,BEG,320,140,114,78,2,26,Narrow_Body,2,78,2170,away,2019-08-17 04:41:00,2019-08-17 05:46:00,2170,930
+52,D,2019-08-17 01:05:00,SU,1562,D,IKT,73H,158,146,89,1,12,Narrow_Body,2,205,2095,away,2019-08-16 23:55:00,2019-08-17 01:00:00,2140,386
+53,D,2019-08-17 11:40:00,SU,1490,D,SLY,32A,158,115,191,1,43,Narrow_Body,2,205,2095,away,2019-08-17 10:29:00,2019-08-17 11:34:00,2125,358
+54,D,2019-08-17 12:10:00,SU,2514,I,BCN,32B,183,180,1,3,3,Narrow_Body,2,10,2095,away,2019-08-17 11:00:00,2019-08-17 12:05:00,2170,832
+55,A,2019-08-17 04:55:00,SU,2591,I,DUB,320,140,125,8,3,15,Narrow_Body,2,10,1915,away,2019-08-17 05:04:00,2019-08-17 06:09:00,2080,985
+56,D,2019-08-17 11:55:00,SU,42,D,LED,32A,158,153,89,1,5,Narrow_Body,2,205,2095,away,2019-08-17 10:45:00,2019-08-17 11:50:00,2140,158
+57,A,2019-08-17 04:55:00,SU,1315,D,MRV,73H,158,152,191,1,6,Narrow_Body,2,205,2095,away,2019-08-17 05:01:00,2019-08-17 06:06:00,2125,301
+58,D,2019-08-17 02:10:00,N4,1835,I,DLM,772,440,352,55,2,88,Wide_Body,2,48,3430,jetbridge,2019-08-17 00:49:00,2019-08-17 01:49:00,3460,877`;
 });
 ;define("svo-aircraft-tetris/data-adapter", ["exports", "@ember-data/debug"], function (_exports, _debug) {
   "use strict";
@@ -4087,7 +4183,7 @@
 
   _exports.default = AircraftStandModel;
 });
-;define("svo-aircraft-tetris/models/timetable", ["exports", "@babel/runtime/helpers/esm/initializerDefineProperty", "@babel/runtime/helpers/esm/defineProperty", "@babel/runtime/helpers/esm/applyDecoratedDescriptor", "@babel/runtime/helpers/esm/initializerWarningHelper", "@ember-data/model"], function (_exports, _initializerDefineProperty2, _defineProperty2, _applyDecoratedDescriptor2, _initializerWarningHelper2, _model) {
+;define("svo-aircraft-tetris/models/timetable", ["exports", "@babel/runtime/helpers/esm/initializerDefineProperty", "@babel/runtime/helpers/esm/defineProperty", "@babel/runtime/helpers/esm/applyDecoratedDescriptor", "@babel/runtime/helpers/esm/initializerWarningHelper", "@ember-data/model", "moment"], function (_exports, _initializerDefineProperty2, _defineProperty2, _applyDecoratedDescriptor2, _initializerWarningHelper2, _model, _moment) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -4116,6 +4212,17 @@
       (0, _initializerDefineProperty2.default)(this, "cost", _descriptor14, this);
       (0, _initializerDefineProperty2.default)(this, "optStand", _descriptor15, this);
       (0, _initializerDefineProperty2.default)(this, "optCost", _descriptor16, this);
+    }
+
+    get airClass() {
+      // Regional,120
+      // Narrow_Body,220
+      // Wide_Body,1000
+      return this.paxCapTotal <= 120 ? 'Regional' : this.paxCapTotal <= 222 ? 'Narrow_Body' : 'Wide_Body';
+    }
+
+    get duration() {
+      return (0, _moment.default)(this.end).diff(this.start, 'minutes');
     }
 
     get diffFromOpt() {
@@ -4307,7 +4414,7 @@
   _exports.default = Router;
   Router.map(function () {});
 });
-;define("svo-aircraft-tetris/routes/index", ["exports", "@babel/runtime/helpers/esm/initializerDefineProperty", "@babel/runtime/helpers/esm/defineProperty", "@babel/runtime/helpers/esm/applyDecoratedDescriptor", "@babel/runtime/helpers/esm/initializerWarningHelper"], function (_exports, _initializerDefineProperty2, _defineProperty2, _applyDecoratedDescriptor2, _initializerWarningHelper2) {
+;define("svo-aircraft-tetris/routes/index", ["exports", "@babel/runtime/helpers/esm/initializerDefineProperty", "@babel/runtime/helpers/esm/defineProperty", "@babel/runtime/helpers/esm/applyDecoratedDescriptor", "@babel/runtime/helpers/esm/initializerWarningHelper", "fetch"], function (_exports, _initializerDefineProperty2, _defineProperty2, _applyDecoratedDescriptor2, _initializerWarningHelper2, _fetch) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -4323,7 +4430,44 @@
       (0, _initializerDefineProperty2.default)(this, "store", _descriptor, this);
     }
 
-    model() {// return this.store.findAll('timetable');
+    async model() {
+      const response = await (0, _fetch.default)('/S_private_3.json');
+      const S = await response.json();
+      Object.keys(S).forEach(lineKey => {
+        const orderedCost = Object.keys(S[lineKey]).map(standKey => {
+          return S[lineKey][standKey];
+        }).sort((a, b) => {
+          return a.Cost - b.Cost;
+        }).slice(0, 20);
+        S[lineKey] = orderedCost;
+      });
+      const responseStands = await (0, _fetch.default)('/data/aircraft-stands.json');
+      let stands = await responseStands.json();
+      stands = stands.reduce((prev, val) => {
+        prev[val['id']] = val;
+        return prev;
+      }, {});
+      const responseRates = await (0, _fetch.default)('/data/handling-rates.json');
+      let rates = await responseRates.json();
+      rates = rates.reduce((prev, val) => {
+        prev[val.Name] = +val.Value;
+        return prev;
+      }, {});
+      const responseTimes = await (0, _fetch.default)('/data/handling-times.json');
+      let times = await responseTimes.json();
+      times = times.reduce((prev, val) => {
+        prev[val['Aircraft_Class']] = {
+          jbTime: +val['JetBridge_Handling_Time'],
+          awayTime: +val['Away_Handling_Time']
+        };
+        return prev;
+      }, {});
+      return {
+        optimalStands: S,
+        stands,
+        rates,
+        times
+      };
     }
 
     setupController(controller) {
@@ -4487,8 +4631,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "9ioBf8j8",
-    "block": "{\"symbols\":[\"standU\",\"form\",\"incorrectStand\",\"intersectedLine\",\"form\"],\"statements\":[[1,[30,[36,7],[\"Index\"],null]],[2,\"\\n\"],[10,\"div\"],[14,0,\"container\"],[12],[2,\"\\n  \"],[10,\"div\"],[14,0,\"row\"],[12],[2,\"\\n    \"],[10,\"div\"],[14,0,\"col-8\"],[12],[2,\"\\n      \"],[10,\"h3\"],[12],[2,\"\\n        Timetables\\n      \"],[13],[2,\"\\n      \"],[8,\"bs-form\",[],[[\"@formLayout\",\"@model\",\"@onSubmit\"],[\"vertical\",[32,0],[32,0,[\"parseTimetable\"]]]],[[\"default\"],[{\"statements\":[[2,\"\\n        \"],[11,\"button\"],[24,0,\"btn btn-outline-primary\"],[4,[38,8],[\"click\",[32,0,[\"deleteTimetable\"]]],null],[12],[2,\"\\n          Delete timetable models\\n        \"],[13],[2,\"\\n        \"],[8,[32,5,[\"element\"]],[[24,\"rows\",\"10\"]],[[\"@controlType\",\"@label\",\"@property\"],[\"textarea\",\"Textarea\",\"timetableCSV\"]],null],[2,\"\\n        \"],[8,[32,5,[\"submitButton\"]],[],[[],[]],[[\"default\"],[{\"statements\":[[2,\"\\n          Parse timetable CSV\\n        \"]],\"parameters\":[]}]]],[2,\"\\n      \"]],\"parameters\":[5]}]]],[2,\"\\n      \"],[10,\"div\"],[14,0,\"row\"],[12],[2,\"\\n        \"],[10,\"div\"],[14,0,\"col-6\"],[12],[2,\"\\n          Number of errors\\n          \"],[1,[32,0,[\"incorrectData\",\"length\"]]],[2,\"\\n        \"],[13],[2,\"\\n        \"],[10,\"div\"],[14,0,\"col-6\"],[12],[2,\"\\n          \"],[11,\"button\"],[24,0,\"btn btn-outline-primary\"],[4,[38,8],[\"click\",[32,0,[\"toggleShowErrors\"]]],null],[12],[2,\"\\n            Show/hide error details\\n          \"],[13],[2,\"\\n        \"],[13],[2,\"\\n\"],[6,[37,9],[[32,0,[\"showErrors\"]]],null,[[\"default\"],[{\"statements\":[[6,[37,2],[[30,[36,1],[[30,[36,1],[[30,[36,6],[200,[32,0,[\"incorrectData\"]]],null]],null]],null]],null,[[\"default\"],[{\"statements\":[[2,\"            \"],[10,\"div\"],[14,0,\"col-3\"],[12],[2,\"\\n              \"],[1,[32,3,[\"standId\"]]],[2,\"\\n            \"],[13],[2,\"\\n            \"],[10,\"div\"],[14,0,\"col-4\"],[12],[2,\"\\n\"],[6,[37,2],[[30,[36,1],[[30,[36,1],[[30,[36,0],[\"start\",[32,3,[\"lines\"]]],null]],null]],null]],null,[[\"default\"],[{\"statements\":[[2,\"                \"],[10,\"div\"],[14,0,\"row\"],[12],[2,\"\\n                  \"],[10,\"div\"],[14,0,\"col-6\"],[12],[2,\"\\n                    \"],[1,[32,4,[\"start\"]]],[2,\"\\n                  \"],[13],[2,\"\\n                  \"],[10,\"div\"],[14,0,\"col-6\"],[12],[2,\"\\n                    \"],[1,[32,4,[\"end\"]]],[2,\"\\n                  \"],[13],[2,\"\\n                \"],[13],[2,\"\\n\"]],\"parameters\":[4]}]]],[2,\"            \"],[13],[2,\"\\n            \"],[10,\"div\"],[14,0,\"col-5\"],[12],[2,\"\\n              \"],[8,\"d3/timetable-chart\",[],[[\"@data\",\"@width\",\"@chartOptions\",\"@aspectRatio\"],[[32,3,[\"lines\"]],260,[30,[36,5],null,[[\"minY\",\"maxY\",\"minX\",\"maxX\"],[\"\",\"\",[30,[36,3],[[30,[36,3],[[30,[36,3],[[32,3],\"lines\"],null],0],null],\"start\"],null],[30,[36,3],[[30,[36,3],[[30,[36,4],[[30,[36,3],[[32,3],\"lines\"],null]],null],0],null],\"end\"],null]]]],0.6]],null],[2,\"\\n            \"],[13],[2,\"\\n\"]],\"parameters\":[3]}]]]],\"parameters\":[]}]]],[2,\"      \"],[13],[2,\"\\n      \"],[11,\"button\"],[24,0,\"btn btn-outline-primary\"],[4,[38,8],[\"click\",[32,0,[\"toggleShowOptions\"]]],null],[12],[2,\"\\n        Show/hide chart options\\n      \"],[13],[2,\"\\n\"],[6,[37,9],[[32,0,[\"showChartOptions\"]]],null,[[\"default\"],[{\"statements\":[[2,\"        \"],[10,\"h3\"],[12],[2,\"\\n          Chart options\\n        \"],[13],[2,\"\\n        \"],[8,\"bs-form\",[],[[\"@formLayout\",\"@model\"],[\"vertical\",[32,0,[\"chartOptions\"]]]],[[\"default\"],[{\"statements\":[[2,\"\\n          \"],[8,[32,2,[\"element\"]],[],[[\"@controlType\",\"@label\",\"@property\"],[\"input\",\"min Y\",\"minY\"]],null],[2,\"\\n          \"],[8,[32,2,[\"element\"]],[],[[\"@controlType\",\"@label\",\"@property\"],[\"input\",\"max Y\",\"maxY\"]],null],[2,\"\\n          \"],[8,[32,2,[\"element\"]],[],[[\"@controlType\",\"@label\",\"@property\"],[\"input\",\"min X\",\"minX\"]],null],[2,\"\\n          \"],[8,[32,2,[\"element\"]],[],[[\"@controlType\",\"@label\",\"@property\"],[\"input\",\"max X\",\"maxX\"]],null],[2,\"\\n        \"]],\"parameters\":[2]}]]],[2,\"\\n\"]],\"parameters\":[]}]]],[2,\"    \"],[13],[2,\"\\n    \"],[10,\"div\"],[14,0,\"col-4\"],[12],[2,\"\\n      \"],[10,\"div\"],[14,0,\"row\"],[12],[2,\"\\n        \"],[10,\"h2\"],[12],[2,\"\\n          Statistics of the arrangement\\n        \"],[13],[2,\"\\n        \"],[10,\"div\"],[14,0,\"col-12\"],[12],[2,\"\\n          \"],[10,\"p\"],[12],[2,\"\\n            Length of timetable:\\n            \"],[1,[32,0,[\"data\",\"length\"]]],[2,\"\\n          \"],[13],[2,\"\\n          \"],[10,\"p\"],[12],[2,\"\\n            Total cost\\n            \"],[1,[32,0,[\"totalCost\"]]],[2,\"\\n          \"],[13],[2,\"\\n          \"],[10,\"p\"],[12],[2,\"\\n            Total Optimal cost\\n            \"],[1,[32,0,[\"totalOptCost\"]]],[2,\"\\n          \"],[13],[2,\"\\n          \"],[10,\"p\"],[12],[2,\"Total utilisation \"],[1,[32,0,[\"totalStandsUtilization\"]]],[13],[2,\"\\n          \"],[10,\"p\"],[12],[2,\"\\n            Ratio\\n            \"],[1,[32,0,[\"optimalRatio\"]]],[2,\"\\n          \"],[13],[2,\"\\n          Stands Utilisations:\\n\"],[6,[37,2],[[30,[36,1],[[30,[36,1],[[30,[36,6],[10,[32,0,[\"standsUtilization\"]]],null]],null]],null]],null,[[\"default\"],[{\"statements\":[[2,\"            \"],[10,\"div\"],[12],[2,\"\\n              \"],[1,[32,1,[\"stand\"]]],[2,\"\\n              \"],[1,[32,1,[\"utilisation\"]]],[2,\"\\n            \"],[13],[2,\"\\n\"]],\"parameters\":[1]}]]],[2,\"        \"],[13],[2,\"\\n      \"],[13],[2,\"\\n    \"],[13],[2,\"\\n    \"],[10,\"div\"],[14,0,\"col-12\"],[12],[2,\"\\n      \"],[8,\"d3/timetable-chart\",[],[[\"@data\",\"@stands\",\"@width\",\"@chartOptions\",\"@aspectRatio\"],[[32,0,[\"data\"]],[32,0,[\"stands\"]],960,[30,[36,5],null,[[\"minY\",\"maxY\",\"minX\",\"maxX\"],[[32,0,[\"chartOptions\",\"minY\"]],[32,0,[\"chartOptions\",\"maxY\"]],[32,0,[\"chartOptions\",\"minX\"]],[32,0,[\"chartOptions\",\"maxX\"]]]]],0.6]],null],[2,\"\\n    \"],[13],[2,\"\\n    \"],[10,\"div\"],[14,0,\"col-12\"],[12],[2,\"\\n      \"],[8,\"d3/stand-utilisation\",[],[[\"@data\",\"@width\",\"@aspectRatio\"],[[32,0,[\"standsUtilization\"]],960,0.3]],null],[2,\"\\n    \"],[13],[2,\"\\n    \"],[10,\"div\"],[14,0,\"col-12\"],[12],[2,\"\\n      \"],[8,\"models-table\",[],[[\"@data\",\"@columns\",\"@showComponentFooter\",\"@showColumnsDropdown\",\"@useFilteringByColumns\",\"@showGlobalFilter\",\"@doFilteringByHiddenColumns\",\"@useNumericPagination\",\"@filteringIgnoreCase\",\"@multipleColumnsSorting\",\"@showCurrentPageNumberSelect\",\"@collapseNumPaginationForPagesCount\",\"@expandedRowComponent\",\"@showPageSize\",\"@pageSize\"],[[32,0,[\"data\"]],[32,0,[\"columns\"]],[32,0,[\"showComponentFooter\"]],[32,0,[\"showColumnsDropdown\"]],[32,0,[\"useFilteringByColumns\"]],[32,0,[\"showGlobalFilter\"]],[32,0,[\"doFilteringByHiddenColumns\"]],[32,0,[\"useNumericPagination\"]],[32,0,[\"filteringIgnoreCase\"]],[32,0,[\"multipleColumnsSorting\"]],[32,0,[\"showCurrentPageNumberSelect\"]],[32,0,[\"collapseNumPaginationForPagesCount\"]],[30,[36,10],[\"emt/expanded-line\"],null],[32,0,[\"showPageSize\"]],50]],null],[2,\"\\n    \"],[13],[2,\"\\n  \"],[13],[2,\"\\n\"],[13],[2,\"\\n\"],[1,[30,[36,10],[[30,[36,11],null,null]],null]]],\"hasEval\":false,\"upvars\":[\"sort-by\",\"-track-array\",\"each\",\"get\",\"reverse\",\"hash\",\"take\",\"page-title\",\"on\",\"if\",\"component\",\"-outlet\"]}",
+    "id": "6Qk1/Mm6",
+    "block": "{\"symbols\":[\"standU\",\"form\",\"incorrectStand\",\"intersectedLine\",\"form\"],\"statements\":[[1,[30,[36,7],[\"Index\"],null]],[2,\"\\n\"],[10,\"div\"],[14,0,\"container\"],[12],[2,\"\\n  \"],[10,\"div\"],[14,0,\"row\"],[12],[2,\"\\n    \"],[10,\"div\"],[14,0,\"col-8\"],[12],[2,\"\\n      \"],[10,\"h3\"],[12],[2,\"\\n        Timetables\\n      \"],[13],[2,\"\\n      \"],[8,\"bs-form\",[],[[\"@formLayout\",\"@model\",\"@onSubmit\"],[\"vertical\",[32,0],[32,0,[\"parseTimetable\"]]]],[[\"default\"],[{\"statements\":[[2,\"\\n        \"],[11,\"button\"],[24,0,\"btn btn-outline-primary\"],[24,4,\"button\"],[4,[38,8],[\"click\",[32,0,[\"deleteTimetable\"]]],null],[12],[2,\"\\n          Delete timetable models\\n        \"],[13],[2,\"\\n        \"],[11,\"button\"],[24,0,\"btn btn-outline-primary\"],[24,4,\"button\"],[4,[38,8],[\"click\",[32,0,[\"calculateCosts\"]]],null],[12],[2,\"\\n          Calculate Costs \"],[1,[32,0,[\"calcCost\"]]],[2,\"\\n        \"],[13],[2,\"\\n        \"],[8,[32,5,[\"element\"]],[[24,\"rows\",\"10\"]],[[\"@controlType\",\"@label\",\"@property\"],[\"textarea\",\"Textarea\",\"timetableCSV\"]],null],[2,\"\\n        \"],[8,[32,5,[\"submitButton\"]],[],[[],[]],[[\"default\"],[{\"statements\":[[2,\"\\n          Parse timetable CSV\\n        \"]],\"parameters\":[]}]]],[2,\"\\n      \"]],\"parameters\":[5]}]]],[2,\"\\n      \"],[10,\"div\"],[14,0,\"row\"],[12],[2,\"\\n        \"],[10,\"div\"],[14,0,\"col-6\"],[12],[2,\"\\n          Number of errors\\n          \"],[1,[32,0,[\"incorrectData\",\"length\"]]],[2,\"\\n        \"],[13],[2,\"\\n        \"],[10,\"div\"],[14,0,\"col-6\"],[12],[2,\"\\n          \"],[11,\"button\"],[24,0,\"btn btn-outline-primary\"],[4,[38,8],[\"click\",[32,0,[\"toggleShowErrors\"]]],null],[12],[2,\"\\n            Show/hide error details\\n          \"],[13],[2,\"\\n        \"],[13],[2,\"\\n\"],[6,[37,9],[[32,0,[\"showErrors\"]]],null,[[\"default\"],[{\"statements\":[[6,[37,2],[[30,[36,1],[[30,[36,1],[[30,[36,6],[200,[32,0,[\"incorrectData\"]]],null]],null]],null]],null,[[\"default\"],[{\"statements\":[[2,\"            \"],[10,\"div\"],[14,0,\"col-3\"],[12],[2,\"\\n              \"],[1,[32,3,[\"standId\"]]],[2,\"\\n            \"],[13],[2,\"\\n            \"],[10,\"div\"],[14,0,\"col-4\"],[12],[2,\"\\n\"],[6,[37,2],[[30,[36,1],[[30,[36,1],[[30,[36,0],[\"start\",[32,3,[\"lines\"]]],null]],null]],null]],null,[[\"default\"],[{\"statements\":[[2,\"                \"],[10,\"div\"],[14,0,\"row\"],[12],[2,\"\\n                  \"],[10,\"div\"],[14,0,\"col-6\"],[12],[2,\"\\n                    \"],[1,[32,4,[\"start\"]]],[2,\"\\n                  \"],[13],[2,\"\\n                  \"],[10,\"div\"],[14,0,\"col-6\"],[12],[2,\"\\n                    \"],[1,[32,4,[\"end\"]]],[2,\"\\n                  \"],[13],[2,\"\\n                \"],[13],[2,\"\\n\"]],\"parameters\":[4]}]]],[2,\"            \"],[13],[2,\"\\n            \"],[10,\"div\"],[14,0,\"col-5\"],[12],[2,\"\\n              \"],[8,\"d3/timetable-chart\",[],[[\"@data\",\"@width\",\"@chartOptions\",\"@aspectRatio\"],[[32,3,[\"lines\"]],260,[30,[36,5],null,[[\"minY\",\"maxY\",\"minX\",\"maxX\"],[\"\",\"\",[30,[36,3],[[30,[36,3],[[30,[36,3],[[32,3],\"lines\"],null],0],null],\"start\"],null],[30,[36,3],[[30,[36,3],[[30,[36,4],[[30,[36,3],[[32,3],\"lines\"],null]],null],0],null],\"end\"],null]]]],0.6]],null],[2,\"\\n            \"],[13],[2,\"\\n\"]],\"parameters\":[3]}]]]],\"parameters\":[]}]]],[2,\"      \"],[13],[2,\"\\n      \"],[11,\"button\"],[24,0,\"btn btn-outline-primary\"],[4,[38,8],[\"click\",[32,0,[\"toggleShowOptions\"]]],null],[12],[2,\"\\n        Show/hide chart options\\n      \"],[13],[2,\"\\n\"],[6,[37,9],[[32,0,[\"showChartOptions\"]]],null,[[\"default\"],[{\"statements\":[[2,\"        \"],[10,\"h3\"],[12],[2,\"\\n          Chart options\\n        \"],[13],[2,\"\\n        \"],[8,\"bs-form\",[],[[\"@formLayout\",\"@model\"],[\"vertical\",[32,0,[\"chartOptions\"]]]],[[\"default\"],[{\"statements\":[[2,\"\\n          \"],[8,[32,2,[\"element\"]],[],[[\"@controlType\",\"@label\",\"@property\"],[\"input\",\"min Y\",\"minY\"]],null],[2,\"\\n          \"],[8,[32,2,[\"element\"]],[],[[\"@controlType\",\"@label\",\"@property\"],[\"input\",\"max Y\",\"maxY\"]],null],[2,\"\\n          \"],[8,[32,2,[\"element\"]],[],[[\"@controlType\",\"@label\",\"@property\"],[\"input\",\"min X\",\"minX\"]],null],[2,\"\\n          \"],[8,[32,2,[\"element\"]],[],[[\"@controlType\",\"@label\",\"@property\"],[\"input\",\"max X\",\"maxX\"]],null],[2,\"\\n        \"]],\"parameters\":[2]}]]],[2,\"\\n\"]],\"parameters\":[]}]]],[2,\"    \"],[13],[2,\"\\n    \"],[10,\"div\"],[14,0,\"col-4\"],[12],[2,\"\\n      \"],[10,\"div\"],[14,0,\"row\"],[12],[2,\"\\n        \"],[10,\"h2\"],[12],[2,\"\\n          Statistics of the arrangement\\n        \"],[13],[2,\"\\n        \"],[10,\"div\"],[14,0,\"col-12\"],[12],[2,\"\\n          \"],[10,\"p\"],[12],[2,\"\\n            Length of timetable:\\n            \"],[1,[32,0,[\"data\",\"length\"]]],[2,\"\\n          \"],[13],[2,\"\\n          \"],[10,\"p\"],[12],[2,\"\\n            Total cost\\n            \"],[1,[32,0,[\"totalCost\"]]],[2,\"\\n          \"],[13],[2,\"\\n          \"],[10,\"p\"],[12],[2,\"\\n            Total Optimal cost / via stands\\n            \"],[1,[32,0,[\"totalOptCost\"]]],[2,\"\\n            /\\n            \"],[1,[32,0,[\"totalOptCostsViaStands\"]]],[2,\"\\n          \"],[13],[2,\"\\n          \"],[10,\"p\"],[12],[2,\"\\n            Total utilisation\\n            \"],[1,[32,0,[\"totalStandsUtilization\"]]],[2,\"\\n          \"],[13],[2,\"\\n          \"],[10,\"p\"],[12],[2,\"\\n            Ratio\\n            \"],[1,[32,0,[\"optimalRatio\"]]],[2,\"\\n          \"],[13],[2,\"\\n          Stands Utilisations:\\n\"],[6,[37,2],[[30,[36,1],[[30,[36,1],[[30,[36,6],[10,[32,0,[\"standsUtilization\"]]],null]],null]],null]],null,[[\"default\"],[{\"statements\":[[2,\"            \"],[10,\"div\"],[12],[2,\"\\n              \"],[1,[32,1,[\"stand\"]]],[2,\"\\n              \"],[1,[32,1,[\"utilisation\"]]],[2,\"\\n            \"],[13],[2,\"\\n\"]],\"parameters\":[1]}]]],[2,\"        \"],[13],[2,\"\\n      \"],[13],[2,\"\\n    \"],[13],[2,\"\\n    \"],[10,\"div\"],[14,0,\"col-12\"],[12],[2,\"\\n      \"],[8,\"d3/timetable-chart\",[],[[\"@data\",\"@stands\",\"@width\",\"@chartOptions\",\"@aspectRatio\"],[[32,0,[\"data\"]],[32,0,[\"stands\"]],960,[30,[36,5],null,[[\"minY\",\"maxY\",\"minX\",\"maxX\"],[[32,0,[\"chartOptions\",\"minY\"]],[32,0,[\"chartOptions\",\"maxY\"]],[32,0,[\"chartOptions\",\"minX\"]],[32,0,[\"chartOptions\",\"maxX\"]]]]],0.6]],null],[2,\"\\n    \"],[13],[2,\"\\n    \"],[10,\"div\"],[14,0,\"col-12\"],[12],[2,\"\\n      \"],[8,\"d3/stand-utilisation\",[],[[\"@data\",\"@width\",\"@aspectRatio\"],[[32,0,[\"standsUtilization\"]],960,0.3]],null],[2,\"\\n    \"],[13],[2,\"\\n    \"],[10,\"div\"],[14,0,\"col-12\"],[12],[2,\"\\n      \"],[8,\"models-table\",[],[[\"@data\",\"@columns\",\"@showComponentFooter\",\"@showColumnsDropdown\",\"@useFilteringByColumns\",\"@showGlobalFilter\",\"@doFilteringByHiddenColumns\",\"@useNumericPagination\",\"@filteringIgnoreCase\",\"@multipleColumnsSorting\",\"@showCurrentPageNumberSelect\",\"@collapseNumPaginationForPagesCount\",\"@expandedRowComponent\",\"@showPageSize\",\"@pageSize\"],[[32,0,[\"data\"]],[32,0,[\"columns\"]],[32,0,[\"showComponentFooter\"]],[32,0,[\"showColumnsDropdown\"]],[32,0,[\"useFilteringByColumns\"]],[32,0,[\"showGlobalFilter\"]],[32,0,[\"doFilteringByHiddenColumns\"]],[32,0,[\"useNumericPagination\"]],[32,0,[\"filteringIgnoreCase\"]],[32,0,[\"multipleColumnsSorting\"]],[32,0,[\"showCurrentPageNumberSelect\"]],[32,0,[\"collapseNumPaginationForPagesCount\"]],[30,[36,10],[\"emt/expanded-line\"],null],[32,0,[\"showPageSize\"]],50]],null],[2,\"\\n    \"],[13],[2,\"\\n  \"],[13],[2,\"\\n\"],[13],[2,\"\\n\"],[1,[30,[36,10],[[30,[36,11],null,null]],null]]],\"hasEval\":false,\"upvars\":[\"sort-by\",\"-track-array\",\"each\",\"get\",\"reverse\",\"hash\",\"take\",\"page-title\",\"on\",\"if\",\"component\",\"-outlet\"]}",
     "moduleName": "svo-aircraft-tetris/templates/index.hbs"
   });
 
@@ -4673,7 +4817,7 @@ catch(err) {
 
 ;
           if (!runningTests) {
-            require("svo-aircraft-tetris/app")["default"].create({"name":"svo-aircraft-tetris","version":"0.0.0+0d9a64f4"});
+            require("svo-aircraft-tetris/app")["default"].create({"name":"svo-aircraft-tetris","version":"0.0.0+4fdf5808"});
           }
         
 //# sourceMappingURL=svo-aircraft-tetris.map

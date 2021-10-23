@@ -44,12 +44,12 @@ const timetableTransform = (timetable) => {
 };
 
 const tasks = [
-  { model: 'aircraft-classes', path: './server/case_svo/AirCraftClasses_Public.csv' },
-  { model: 'handling-rates', path: './server/case_svo/Handling_Rates_Public.csv' },
-  { model: 'handling-times', path: './server/case_svo/Handling_Time_Public.csv' },
-  { model: 'aircraft-stands', path: './server/case_svo/Aircraft_Stands_Public.csv', transform: aircraftStandsTransform },
-  { model: 'timetables', path: './server/case_svo/Timetable_Public.csv', transform: timetableTransform },
-  { model: 'timetables', path: './server/calc_input/result.csv', transform: timetableTransform },
+  { model: 'aircraft-classes', path: './server/case_svo/AirCraftClasses_private.csv' },
+  { model: 'handling-rates', path: './server/case_svo/Handling_Rates_private.csv' },
+  { model: 'handling-times', path: './server/case_svo/Handling_Time_private.csv' },
+  { model: 'aircraft-stands', path: './server/case_svo/Aircraft_Stands_private.csv', transform: aircraftStandsTransform },
+  { model: 'timetables', path: './server/case_svo/Timetable_private.csv', transform: timetableTransform },
+  // { model: 'timetables', path: './server/calc_input/result.csv', transform: timetableTransform },
 ];
 
 const performTask = async function (task) {
@@ -59,8 +59,8 @@ const performTask = async function (task) {
   }
 
   console.log(json.slice(0, 20));
-  const saveJson = `module.exports = ${JSON.stringify(json)}`;
-  fs.writeFileSync(`./server/data/${task.model}.js`, saveJson);
+  const saveJson = JSON.stringify(json);
+  fs.writeFileSync(`./public/data/${task.model}.json`, saveJson);
 };
 
 tasks.forEach(performTask);
