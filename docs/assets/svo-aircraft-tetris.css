@@ -52,3 +52,7 @@
   stroke: darkblue;
   fill: darkblue;
 }
+
+.selected-row {
+  background-color: aquamarine;
+}

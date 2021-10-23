@@ -12,10 +12,15 @@ export default class TimetableModel extends Model {
   @attr('string') airport;
   @attr('number') pax;
   @attr('number') paxCapTotal;
-
+  @attr('number') index;
   @attr('number') terminalId;
   @attr('number') standId;
   @attr('number') cost;
+  @attr('number') optStand;
+  @attr('number') optCost;
+  get diffFromOpt() {
+    return this.cost / this.optCost;
+  }
   get pseudoAcCode() {
     return `${this.airline}-${this.paxCapTotal}-${this.synchronCode}-${this.terminalId}`;
   }

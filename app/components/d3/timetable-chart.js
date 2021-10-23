@@ -170,7 +170,7 @@ export default class D3TimetableChartComponent extends Component {
         .append('circle')
         .attr('cx', () => xScale(timeline.dot))
         .attr('cy', () => yScale(timeline.y))
-        .attr('r', 3)
+        .attr('r', 2)
         .attr('class', `time-line-dot-${timeline.terminal}`);
 
       // gMarg

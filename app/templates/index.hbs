@@ -1,11 +1,7 @@
 {{page-title 'Index'}}
 <div class="container">
-  <h3>
-    Timetable length
-    {{this.data.length}}
-  </h3>
   <div class="row">
-    <div class="col-12">
+    <div class="col-8">
       <h3>
         Timetables
       </h3>
@@ -21,46 +17,61 @@
           @controlType="textarea"
           @label="Textarea"
           @property="timetableCSV"
+          rows="10"
         />
         <form.submitButton>
           Parse timetable CSV
         </form.submitButton>
       </BsForm>
       <div class="row">
-        <div class="col-12">
+        <div class="col-6">
           Number of errors
           {{this.incorrectData.length}}
         </div>
-        {{#each (take 200 this.incorrectData) as |incorrectStand|}}
-          <div class="col-3">
-            {{incorrectStand.standId}}
-          </div>
-          <div class="col-4">
-            {{#each incorrectStand.lines as |intersectedLine|}}
-              <div class="row">
-                <div class="col-6">
-                  {{intersectedLine.start}}
-                </div>
-                <div class="col-6">
-                  {{intersectedLine.end}}
-                </div>
-              </div>
-            {{/each}}
-          </div>
-          <div class="col-5">
-            <D3::TimetableChart
-              @data={{incorrectStand.lines}}
-              @width={{260}}
-              @chartOptions={{hash
-                minY=''
-                maxY=''
-                minX=(get (get (get incorrectStand 'lines') 0) 'start')
-                maxX=(get (get (reverse (get incorrectStand 'lines')) 0) 'end')
+        <div class="col-6">
+          <button
+            class="btn btn-secondary"
+            {{on 'click' this.toggleShowErrors}}
+          >
+            Show/hide error details
+          </button>
+        </div>
+        {{#if this.showErrors}}
+          {{#each (take 200 this.incorrectData) as |incorrectStand|}}
+            <div class="col-3">
+              {{incorrectStand.standId}}
+            </div>
+            <div class="col-4">
+              {{#each
+                (sort-by 'start' incorrectStand.lines) as |intersectedLine|
               }}
-              @aspectRatio={{0.6}}
-            />
-          </div>
-        {{/each}}
+                <div class="row">
+                  <div class="col-6">
+                    {{intersectedLine.start}}
+                  </div>
+                  <div class="col-6">
+                    {{intersectedLine.end}}
+                  </div>
+                </div>
+              {{/each}}
+            </div>
+            <div class="col-5">
+              <D3::TimetableChart
+                @data={{incorrectStand.lines}}
+                @width={{260}}
+                @chartOptions={{hash
+                  minY=''
+                  maxY=''
+                  minX=(get (get (get incorrectStand 'lines') 0) 'start')
+                  maxX=(get
+                    (get (reverse (get incorrectStand 'lines')) 0) 'end'
+                  )
+                }}
+                @aspectRatio={{0.6}}
+              />
+            </div>
+          {{/each}}
+        {{/if}}
       </div>
       <h3>
         Chart options
@@ -78,6 +89,39 @@
           Change options
         </form.submitButton>
       </BsForm>
+    </div>
+    <div class="col-4">
+      <div class="row">
+        <h2>
+          Statistics of the arrangement
+        </h2>
+        <div class="col-12">
+          <p>
+            Length of timetable:
+            {{this.data.length}}
+          </p>
+          <p>
+            Total cost
+            {{this.totalCost}}
+          </p>
+          <p>
+            Total Optimal cost
+            {{this.totalOptCost}}
+          </p>
+          <p>
+            Ratio
+            {{this.optimalRatio}}
+          </p>
+          Stands Utilisations:
+          {{#each (take 10 this.standsUtilization) as |standU|}}
+            <p>
+              {{standU.stand}} {{standU.utilisation}}
+            </p>
+          {{/each}}
+        </div>
+      </div>
+    </div>
+    <div class="col-12">
       <D3::TimetableChart
         @data={{this.data}}
         @width={{960}}
@@ -105,7 +149,9 @@
         @showCurrentPageNumberSelect={{this.showCurrentPageNumberSelect}}
         @collapseNumPaginationForPagesCount={{this.collapseNumPaginationForPagesCount
         }}
+        @expandedRowComponent={{component 'emt/expanded-line'}}
         @showPageSize={{this.showPageSize}}
+        @pageSize={{50}}
       />
     </div>
   </div>
