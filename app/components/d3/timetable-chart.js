@@ -46,7 +46,7 @@ export default class D3TimetableChartComponent extends Component {
   get minX() {
     const option = this.args.chartOptions.minX;
     const momentObj = moment(option);
-    return momentObj.isValid() ? momentObj : moment('2019-05-17 00:00:00',"YYYY-MM-DD hh:mm:ss");
+    return momentObj.isValid() ? momentObj : moment('2019-05-17 00:00:00', "YYYY-MM-DD hh:mm:ss");
   }
 
   get maxX() {
@@ -90,20 +90,12 @@ export default class D3TimetableChartComponent extends Component {
     return data.map((value) => {
       // const time = moment(value.time);
       let result = {};
-      // let result = value.isArrival
-      //   ? {
-      //     start: time,
-      //     end: time.clone().add(1, 'hours'),
-      //   }
-      //   : {
-      //     start: time.clone().subtract(1, 'hours'),
-      //     end: time,
-      //   };
       result['start'] = moment(value.start);
       result['end'] = moment(value.end);
       result['dot'] = moment(value.time);
       // result['y'] = Number(value.id);
       result['y'] = Number(value.standId);
+      result['standType'] = value.flightType;
       result['terminal'] = value.terminalId;
       return result;
     });
@@ -158,6 +150,14 @@ export default class D3TimetableChartComponent extends Component {
       .call(yAxis);
 
     this.chartData.forEach((timeline) => {
+      // gMarg
+      //   .append('rect')
+      //   .attr('x', () => xScale(timeline.start))
+      //   .attr('y', () => yScale(timeline.y) - 2)
+      //   .attr('width', () => xScale(timeline.end) - xScale(timeline.start))
+      //   .attr('height', () => 4)
+      //   .attr('class', `time-line-type-${timeline.standType}`);
+
       gMarg
         .append('line')
         .attr('x1', () => xScale(timeline.start))

@@ -1,12 +1,13 @@
+/* @import './main.css'; */
+
 .time-line-element- {
   stroke: black;
   stroke-width: 2;
 }
 .time-line-dot- {
   stroke: black;
-  fill: black;
+  fill: none;
 }
-
 
 .time-line-element-1 {
   stroke-width: 2;
@@ -14,7 +15,7 @@
 }
 .time-line-dot-1 {
   stroke: green;
-  fill: green;
+  fill: none;
 }
 
 .time-line-element-2 {
@@ -23,7 +24,7 @@
 }
 .time-line-dot-2 {
   stroke: red;
-  fill: red;
+  fill: none;
 }
 
 .time-line-element-3 {
@@ -32,7 +33,7 @@
 }
 .time-line-dot-3 {
   stroke: orange;
-  fill: orange;
+  fill: none;
 }
 
 .time-line-element-4 {
@@ -41,7 +42,7 @@
 }
 .time-line-dot-4 {
   stroke: deeppink;
-  fill: deeppink;
+  fill: none;
 }
 
 .time-line-element-5 {
@@ -50,9 +51,20 @@
 }
 .time-line-dot-5 {
   stroke: darkblue;
-  fill: darkblue;
+  fill: none;
 }
 
 .selected-row {
   background-color: aquamarine;
+}
+
+.bar-stand-maximum {
+  stroke: green;
+  fill: green;
+}
+
+.bar-stand-utilisation {
+  stroke: #007bff;
+  fill: blue;
+  fill-opacity: 0.4;
 }

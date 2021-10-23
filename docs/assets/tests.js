@@ -1,5 +1,41 @@
 'use strict';
 
+define("svo-aircraft-tetris/tests/integration/components/d3/stand-utilisation-test", ["qunit", "ember-qunit", "@ember/test-helpers"], function (_qunit, _emberQunit, _testHelpers) {
+  "use strict";
+
+  (0, _qunit.module)('Integration | Component | d3/stand-utilisation', function (hooks) {
+    (0, _emberQunit.setupRenderingTest)(hooks);
+    (0, _qunit.test)('it renders', async function (assert) {
+      // Set any properties with this.set('myProperty', 'value');
+      // Handle any actions with this.set('myAction', function(val) { ... });
+      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      /*
+        <D3::StandUtilisation />
+      */
+      {
+        "id": "GS7BCczn",
+        "block": "{\"symbols\":[],\"statements\":[[8,\"d3/stand-utilisation\",[],[[],[]],null]],\"hasEval\":false,\"upvars\":[]}",
+        "moduleName": "(unknown template module)"
+      }));
+      assert.equal(this.element.textContent.trim(), ''); // Template block usage:
+
+      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      /*
+        
+            <D3::StandUtilisation>
+              template block text
+            </D3::StandUtilisation>
+          
+      */
+      {
+        "id": "SuhNd62c",
+        "block": "{\"symbols\":[],\"statements\":[[2,\"\\n      \"],[8,\"d3/stand-utilisation\",[],[[],[]],[[\"default\"],[{\"statements\":[[2,\"\\n        template block text\\n      \"]],\"parameters\":[]}]]],[2,\"\\n    \"]],\"hasEval\":false,\"upvars\":[]}",
+        "moduleName": "(unknown template module)"
+      }));
+      assert.equal(this.element.textContent.trim(), 'template block text');
+    });
+  });
+});
 define("svo-aircraft-tetris/tests/integration/components/d3/timetable-chart-test", ["qunit", "ember-qunit", "@ember/test-helpers"], function (_qunit, _emberQunit, _testHelpers) {
   "use strict";
 

@@ -10,7 +10,7 @@
         @model={{this}}
         @onSubmit={{this.parseTimetable}} as |form|
       >
-        <button class="btn btn-primary" {{on 'click' this.deleteTimetable}}>
+        <button class="btn btn-outline-primary" {{on 'click' this.deleteTimetable}}>
           Delete timetable models
         </button>
         <form.element
@@ -30,7 +30,7 @@
         </div>
         <div class="col-6">
           <button
-            class="btn btn-secondary"
+            class="btn btn-outline-primary"
             {{on 'click' this.toggleShowErrors}}
           >
             Show/hide error details
@@ -73,22 +73,20 @@
           {{/each}}
         {{/if}}
       </div>
-      <h3>
-        Chart options
-      </h3>
-      <BsForm
-        @formLayout="vertical"
-        @model={{this.chartOptions}}
-        @onSubmit={{this.changeChartOptions}} as |form|
-      >
-        <form.element @controlType="input" @label="min Y" @property="minY" />
-        <form.element @controlType="input" @label="max Y" @property="maxY" />
-        <form.element @controlType="input" @label="min X" @property="minX" />
-        <form.element @controlType="input" @label="max X" @property="maxX" />
-        <form.submitButton>
-          Change options
-        </form.submitButton>
-      </BsForm>
+      <button class="btn btn-outline-primary" {{on 'click' this.toggleShowOptions}}>
+        Show/hide chart options
+      </button>
+      {{#if this.showChartOptions}}
+        <h3>
+          Chart options
+        </h3>
+        <BsForm @formLayout="vertical" @model={{this.chartOptions}} as |form|>
+          <form.element @controlType="input" @label="min Y" @property="minY" />
+          <form.element @controlType="input" @label="max Y" @property="maxY" />
+          <form.element @controlType="input" @label="min X" @property="minX" />
+          <form.element @controlType="input" @label="max X" @property="maxX" />
+        </BsForm>
+      {{/if}}
     </div>
     <div class="col-4">
       <div class="row">
@@ -108,15 +106,17 @@
             Total Optimal cost
             {{this.totalOptCost}}
           </p>
+          <p>Total utilisation {{this.totalStandsUtilization}}</p>
           <p>
             Ratio
             {{this.optimalRatio}}
           </p>
           Stands Utilisations:
           {{#each (take 10 this.standsUtilization) as |standU|}}
-            <p>
-              {{standU.stand}} {{standU.utilisation}}
-            </p>
+            <div>
+              {{standU.stand}}
+              {{standU.utilisation}}
+            </div>
           {{/each}}
         </div>
       </div>
@@ -124,6 +124,7 @@
     <div class="col-12">
       <D3::TimetableChart
         @data={{this.data}}
+        @stands={{this.stands}}
         @width={{960}}
         @chartOptions={{hash
           minY=this.chartOptions.minY
@@ -132,6 +133,13 @@
           maxX=this.chartOptions.maxX
         }}
         @aspectRatio={{0.6}}
+      />
+    </div>
+    <div class="col-12">
+      <D3::StandUtilisation
+        @data={{this.standsUtilization}}
+        @width={{960}}
+        @aspectRatio={{0.3}}
       />
     </div>
     <div class="col-12">
