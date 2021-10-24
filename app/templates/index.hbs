@@ -149,6 +149,9 @@
     </div>
     <TimelinesFiltering @inputData={{this.data}} as |tlf|>
       <div class="col-12">
+        <h3>
+          Flights arrangement
+        </h3>
         <div class="card-deck">
           <div class="card m-2">
             <div class="card-body">
@@ -267,6 +270,9 @@
       </div>
     </TimelinesFiltering>
     <div class="col-12">
+      <h3>
+        Places utilisation
+      </h3>
       <D3::StandUtilisation
         @data={{this.standsUtilization}}
         @width={{960}}
@@ -274,6 +280,9 @@
       />
     </div>
     <div class="col-12">
+      <h3>
+        Diff from optimal
+      </h3>
       <D3::StandsOptimalPrices
         @data={{this.timelinesByDiffFromOpt}}
         @width={{960}}
