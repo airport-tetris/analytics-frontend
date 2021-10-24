@@ -10,19 +10,20 @@
         @model={{this}}
         @onSubmit={{this.parseTimetable}} as |form|
       >
-        <button
+        {{!-- <button
           type="button"
           class="btn btn-outline-primary"
           {{on 'click' this.costsOptArray}}
         >
           Calculate MiniMax rearrangement
-        </button>
+        </button> --}}
         <button
           type="button"
           class="btn btn-outline-primary"
           {{on 'click' this.calculateCosts}}
         >
-          Calculate Costs {{this.calcCost}}
+          Calculate Costs
+          {{this.calcCost}}
         </button>
         <form.element
           @controlType="textarea"
@@ -30,24 +31,29 @@
           @property="timetableCSV"
           rows="10"
         />
-        <form.submitButton>
-          Parse timetable CSV
-        </form.submitButton>
+        <div class="row mb-3">
+          <div class="col-4">
+            <form.submitButton>
+              Parse timetable CSV
+            </form.submitButton>
+          </div>
+          <div class="col-4">
+            Number of errors
+            {{this.incorrectData.length}}
+          </div>
+          <div class="col-4">
+            <button
+              type="button"
+              class="btn btn-outline-primary"
+              {{on 'click' this.toggleShowErrors}}
+            >
+              Show/hide error details
+            </button>
+          </div>
+        </div>
       </BsForm>
-      <div class="row">
-        <div class="col-6">
-          Number of errors
-          {{this.incorrectData.length}}
-        </div>
-        <div class="col-6">
-          <button
-            class="btn btn-outline-primary"
-            {{on 'click' this.toggleShowErrors}}
-          >
-            Show/hide error details
-          </button>
-        </div>
-        {{#if this.showErrors}}
+      {{#if this.showErrors}}
+        <div class="row">
           {{#each (take 200 this.incorrectData) as |incorrectStand|}}
             <div class="col-3">
               {{incorrectStand.standId}}
@@ -82,9 +88,10 @@
               />
             </div>
           {{/each}}
-        {{/if}}
-      </div>
+        </div>
+      {{/if}}
       <button
+        type="button"
         class="btn btn-outline-primary"
         {{on 'click' this.toggleShowOptions}}
       >
@@ -140,20 +147,125 @@
         </div>
       </div>
     </div>
-    <div class="col-12">
-      <D3::TimetableChart
-        @data={{this.data}}
-        @stands={{this.stands}}
-        @width={{960}}
-        @chartOptions={{hash
-          minY=this.chartOptions.minY
-          maxY=this.chartOptions.maxY
-          minX=this.chartOptions.minX
-          maxX=this.chartOptions.maxX
-        }}
-        @aspectRatio={{0.6}}
-      />
-    </div>
+    <TimelinesFiltering @inputData={{this.data}} as |tlf|>
+      <div class="col-12">
+        <div class="card-deck">
+          <div class="card m-2">
+            <div class="card-body">
+              <h5 class="card-title">
+                Filters
+              </h5>
+              <form>
+                <div class="form-group row">
+                  <label
+                    for="exampleInputMaintenanceGroup"
+                    class="col-sm-2 col-form-label"
+                  >
+                    Terminal
+                  </label>
+                  <div
+                    class="btn-toolbar col-sm-10"
+                    id="exampleInputMaintenanceGroup"
+                    role="toolbar"
+                    aria-label="Toolbar with button groups"
+                  >
+                    <div
+                      class="btn-group mr-2"
+                      role="group"
+                      aria-label="First group"
+                    >
+                      {{#each tlf.terminalFilters as |termFilt|}}
+                        <button
+                          type="button"
+                          class="btn
+                            {{if
+                              termFilt.enabled
+                              'btn-primary'
+                              'btn-outline-primary'
+                            }}"
+                          {{on 'click' (fn tlf.toggleFilter termFilt)}}
+                        >
+                          {{termFilt.label}}
+                        </button>
+                      {{/each}}
+                    </div>
+                  </div>
+                </div>
+                <div class="form-group row">
+                  <label
+                    for="exampleInputMaintenanceGroup"
+                    class="col-sm-2 col-form-label"
+                  >
+                    Body type
+                  </label>
+                  <div
+                    class="btn-toolbar col-sm-10"
+                    id="exampleInputMaintenanceGroup"
+                    role="toolbar"
+                    aria-label="Toolbar with button groups"
+                  >
+                    <div
+                      class="btn-group mr-2"
+                      role="group"
+                      aria-label="First group"
+                    >
+                      {{#each tlf.airClassFilters as |classFilt|}}
+                        <button
+                          type="button"
+                          class="btn
+                            {{if
+                              classFilt.enabled
+                              'btn-primary'
+                              'btn-outline-primary'
+                            }}"
+                          {{on 'click' (fn tlf.toggleFilter classFilt)}}
+                        >
+                          {{classFilt.label}}
+                        </button>
+                      {{/each}}
+                    </div>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-12">
+        <D3::TimetableChart
+          @data={{tlf.outputData}}
+          @stands={{this.stands}}
+          @width={{960}}
+          @chartOptions={{hash
+            minY=this.chartOptions.minY
+            maxY=this.chartOptions.maxY
+            minX=this.chartOptions.minX
+            maxX=this.chartOptions.maxX
+          }}
+          @aspectRatio={{0.6}}
+        />
+      </div>
+      <div class="col-12">
+        <ModelsTable
+          @data={{this.data}}
+          @columns={{this.columns}}
+          @showComponentFooter={{this.showComponentFooter}}
+          @showColumnsDropdown={{this.showColumnsDropdown}}
+          @useFilteringByColumns={{this.useFilteringByColumns}}
+          @showGlobalFilter={{this.showGlobalFilter}}
+          @doFilteringByHiddenColumns={{this.doFilteringByHiddenColumns}}
+          @useNumericPagination={{this.useNumericPagination}}
+          @filteringIgnoreCase={{this.filteringIgnoreCase}}
+          @multipleColumnsSorting={{this.multipleColumnsSorting}}
+          @showCurrentPageNumberSelect={{this.showCurrentPageNumberSelect}}
+          @collapseNumPaginationForPagesCount={{this.collapseNumPaginationForPagesCount
+          }}
+          @expandedRowComponent={{component 'emt/expanded-line'}}
+          @showPageSize={{this.showPageSize}}
+          @pageSize={{50}}
+        />
+      </div>
+    </TimelinesFiltering>
     <div class="col-12">
       <D3::StandUtilisation
         @data={{this.standsUtilization}}
@@ -162,23 +274,10 @@
       />
     </div>
     <div class="col-12">
-      <ModelsTable
-        @data={{this.data}}
-        @columns={{this.columns}}
-        @showComponentFooter={{this.showComponentFooter}}
-        @showColumnsDropdown={{this.showColumnsDropdown}}
-        @useFilteringByColumns={{this.useFilteringByColumns}}
-        @showGlobalFilter={{this.showGlobalFilter}}
-        @doFilteringByHiddenColumns={{this.doFilteringByHiddenColumns}}
-        @useNumericPagination={{this.useNumericPagination}}
-        @filteringIgnoreCase={{this.filteringIgnoreCase}}
-        @multipleColumnsSorting={{this.multipleColumnsSorting}}
-        @showCurrentPageNumberSelect={{this.showCurrentPageNumberSelect}}
-        @collapseNumPaginationForPagesCount={{this.collapseNumPaginationForPagesCount
-        }}
-        @expandedRowComponent={{component 'emt/expanded-line'}}
-        @showPageSize={{this.showPageSize}}
-        @pageSize={{50}}
+      <D3::StandsOptimalPrices
+        @data={{this.timelinesByDiffFromOpt}}
+        @width={{960}}
+        @aspectRatio={{0.3}}
       />
     </div>
   </div>

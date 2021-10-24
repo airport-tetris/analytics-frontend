@@ -36,6 +36,42 @@ define("svo-aircraft-tetris/tests/integration/components/d3/stand-utilisation-te
     });
   });
 });
+define("svo-aircraft-tetris/tests/integration/components/d3/stands-optimal-prices-test", ["qunit", "ember-qunit", "@ember/test-helpers"], function (_qunit, _emberQunit, _testHelpers) {
+  "use strict";
+
+  (0, _qunit.module)('Integration | Component | d3/stands-optimal-prices', function (hooks) {
+    (0, _emberQunit.setupRenderingTest)(hooks);
+    (0, _qunit.test)('it renders', async function (assert) {
+      // Set any properties with this.set('myProperty', 'value');
+      // Handle any actions with this.set('myAction', function(val) { ... });
+      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      /*
+        <D3::StandsOptimalPrices />
+      */
+      {
+        "id": "pna6FDDj",
+        "block": "{\"symbols\":[],\"statements\":[[8,\"d3/stands-optimal-prices\",[],[[],[]],null]],\"hasEval\":false,\"upvars\":[]}",
+        "moduleName": "(unknown template module)"
+      }));
+      assert.equal(this.element.textContent.trim(), ''); // Template block usage:
+
+      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      /*
+        
+            <D3::StandsOptimalPrices>
+              template block text
+            </D3::StandsOptimalPrices>
+          
+      */
+      {
+        "id": "euPthc4Y",
+        "block": "{\"symbols\":[],\"statements\":[[2,\"\\n      \"],[8,\"d3/stands-optimal-prices\",[],[[],[]],[[\"default\"],[{\"statements\":[[2,\"\\n        template block text\\n      \"]],\"parameters\":[]}]]],[2,\"\\n    \"]],\"hasEval\":false,\"upvars\":[]}",
+        "moduleName": "(unknown template module)"
+      }));
+      assert.equal(this.element.textContent.trim(), 'template block text');
+    });
+  });
+});
 define("svo-aircraft-tetris/tests/integration/components/d3/timetable-chart-test", ["qunit", "ember-qunit", "@ember/test-helpers"], function (_qunit, _emberQunit, _testHelpers) {
   "use strict";
 
@@ -174,6 +210,42 @@ define("svo-aircraft-tetris/tests/integration/components/emt/expanded-line-test"
       {
         "id": "RXcZOjOD",
         "block": "{\"symbols\":[],\"statements\":[[2,\"\\n      \"],[8,\"emt/expanded-line\",[],[[],[]],[[\"default\"],[{\"statements\":[[2,\"\\n        template block text\\n      \"]],\"parameters\":[]}]]],[2,\"\\n    \"]],\"hasEval\":false,\"upvars\":[]}",
+        "moduleName": "(unknown template module)"
+      }));
+      assert.equal(this.element.textContent.trim(), 'template block text');
+    });
+  });
+});
+define("svo-aircraft-tetris/tests/integration/components/timelines-filtering-test", ["qunit", "ember-qunit", "@ember/test-helpers"], function (_qunit, _emberQunit, _testHelpers) {
+  "use strict";
+
+  (0, _qunit.module)('Integration | Component | timelines-filtering', function (hooks) {
+    (0, _emberQunit.setupRenderingTest)(hooks);
+    (0, _qunit.test)('it renders', async function (assert) {
+      // Set any properties with this.set('myProperty', 'value');
+      // Handle any actions with this.set('myAction', function(val) { ... });
+      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      /*
+        <TimelinesFiltering />
+      */
+      {
+        "id": "7DMsQ8yX",
+        "block": "{\"symbols\":[],\"statements\":[[8,\"timelines-filtering\",[],[[],[]],null]],\"hasEval\":false,\"upvars\":[]}",
+        "moduleName": "(unknown template module)"
+      }));
+      assert.equal(this.element.textContent.trim(), ''); // Template block usage:
+
+      await (0, _testHelpers.render)(Ember.HTMLBars.template(
+      /*
+        
+            <TimelinesFiltering>
+              template block text
+            </TimelinesFiltering>
+          
+      */
+      {
+        "id": "g9vTKm8Q",
+        "block": "{\"symbols\":[],\"statements\":[[2,\"\\n      \"],[8,\"timelines-filtering\",[],[[],[]],[[\"default\"],[{\"statements\":[[2,\"\\n        template block text\\n      \"]],\"parameters\":[]}]]],[2,\"\\n    \"]],\"hasEval\":false,\"upvars\":[]}",
         "moduleName": "(unknown template module)"
       }));
       assert.equal(this.element.textContent.trim(), 'template block text');

@@ -13,7 +13,7 @@ import {
 } from 'd3';
 import moment from 'moment';
 
-export default class D3TimetableChartComponent extends Component {
+export default class D3StandsUtilisationComponent extends Component {
   constructor() {
     super(...arguments);
     this.svgId = `d3-stand-utilisation-${Math.floor(Math.random() * 10000)}`;

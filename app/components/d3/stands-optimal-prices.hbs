@@ -1,0 +1,9 @@
+<svg
+  id={{this.svgId}}
+  preserveAspectRatio="xMinYMin meet"
+  width="100%" height="100%"
+  viewBox="0 0 {{this.width}} {{this.height}}"
+  {{did-insert this.initialRender}}
+  {{did-update this.update @data @chartOptions}}
+>
+</svg>
