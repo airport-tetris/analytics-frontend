@@ -6,7 +6,7 @@ import fetch from 'fetch';
 export default class IndexRoute extends Route {
   @service store;
   async model() {
-    const response = await fetch('/S_private_3.json');
+    const response = await fetch('S_private_4.json');
     const S = await response.json();
     Object.keys(S).forEach((lineKey) => {
       const orderedCost = Object.keys(S[lineKey])
@@ -20,20 +20,20 @@ export default class IndexRoute extends Route {
       S[lineKey] = orderedCost;
     });
 
-    const responseStands = await fetch('/data/aircraft-stands.json');
+    const responseStands = await fetch('aircraft-stands.json');
     let stands = await responseStands.json();
     stands = stands.reduce((prev, val) => {
       prev[val['id']] = val;
       return prev;
     }, {});
 
-    const responseRates = await fetch('/data/handling-rates.json');
+    const responseRates = await fetch('handling-rates.json');
     let rates = await responseRates.json();
     rates = rates.reduce((prev, val) => {
       prev[val.Name] = +val.Value;
       return prev;
     }, {});
-    const responseTimes = await fetch('/data/handling-times.json');
+    const responseTimes = await fetch('handling-times.json');
     let times = await responseTimes.json();
 
     times = times.reduce((prev, val) => {

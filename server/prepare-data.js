@@ -60,7 +60,7 @@ const performTask = async function (task) {
 
   console.log(json.slice(0, 20));
   const saveJson = JSON.stringify(json);
-  fs.writeFileSync(`./public/data/${task.model}.json`, saveJson);
+  fs.writeFileSync(`./public/${task.model}.json`, saveJson);
 };
 
 tasks.forEach(performTask);

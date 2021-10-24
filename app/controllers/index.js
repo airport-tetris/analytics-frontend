@@ -23,14 +23,14 @@ export default class IndexController extends Controller {
       sortFunction: function sortBefore(i1, i2) {
         return moment(i1).diff(i2);
       },
-      component: 'emt/datetime-format-start',
+      // component: 'emt/datetime-format-start',
     },
     {
       propertyName: 'end',
       sortFunction: function sortBefore(i1, i2) {
         return moment(i1).diff(i2);
       },
-      component: 'emt/datetime-format-start',
+      // component: 'emt/datetime-format-start',
     },
     { propertyName: 'duration' },
     { propertyName: 'airline', isHidden: true },
@@ -188,6 +188,22 @@ export default class IndexController extends Controller {
     }, 0);
   }
 
+  @action
+  costsOptArray() {
+    const result = this.data
+      .map((timeline) => {
+        return {
+          index: timeline.index,
+          cost: this.model.optimalStands[timeline.index][0].Cost,
+        };
+      })
+      .sort((a, b) => {
+        return b.cost - a.cost;
+      })
+      .map(i => i.index);
+    console.log(result);
+  }
+
   get optimalRatio() {
     return this.totalCost / this.totalOptCost;
   }
@@ -260,41 +276,71 @@ export default class IndexController extends Controller {
   }
 
   @action
+  arrageTimelines() {
+    let processedLines = this.data.map((timeline) => {
+      const isArrival = timeline.isArrival;
+      const isDomestic = timeline.flightType;
+    });
+
+    this.data = A(processedLines);
+  }
+
+  @action
   toggleShowErrors() {
     this.showErrors = !this.showErrors;
+  }
+
+  calculateTimesPerTimelineStand(timeline, standId) {
+    const stand = this.model.stands[standId];
+    const isAway = stand['jetbridgeType'] === 'N';
+    const busTime = calcTime(stand, timeline.terminalId);
+    const standTime =
+      this.model.times[timeline.airClass][isAway ? 'awayTime' : 'jbTime'];
+    const taxiingTime = +stand['taxiingTime'];
+    return {
+      busTime,
+      standTime,
+      taxiingTime,
+    };
+  }
+
+  calculateCostPerTimelineStand(timeline, standId) {
+    const stand = this.model.stands[standId];
+    const isAway = stand['jetbridgeType'] === 'N';
+
+    const busRate = +this.model.rates['Bus_Cost_per_Minute'];
+    const busTime = calcTime(stand, timeline.terminalId);
+    const busCount = Math.ceil(+timeline.pax / 80);
+    const busCost = isAway ? busCount * busTime * busRate : 0;
+
+    const standRate = isAway
+      ? +this.model.rates['Away_Aircraft_Stand_Cost_per_Minute']
+      : +this.model.rates['JetBridge_Aircraft_Stand_Cost_per_Minute'];
+
+    const standTime =
+      this.model.times[timeline.airClass][isAway ? 'awayTime' : 'jbTime'];
+    const standCost = standRate * standTime;
+
+    const taxiingRate = this.model.rates['Aircraft_Taxiing_Cost_per_Minute'];
+    const taxiingTime = +stand['taxiingTime'];
+    const taxiingCost = taxiingRate * taxiingTime;
+
+    const totalCost = busCost + taxiingCost + standCost;
+    return totalCost;
   }
 
   @action
   calculateCosts() {
     const calcCost = this.data.reduce((prev, timeline) => {
-      const stand = this.model.stands[timeline.standId];
-      const isAway = stand['jetbridgeType'] === 'N';
-
-      const busRate = +this.model.rates['Bus_Cost_per_Minute'];
-      const busTime = calcTime(stand, timeline.terminalId);
-      const busCount = Math.ceil(+timeline.pax / 80);
-      const busCost = isAway ? busCount * busTime * busRate : 0;
-
-      const standRate = isAway
-        ? +this.model.rates['Away_Aircraft_Stand_Cost_per_Minute']
-        : +this.model.rates['JetBridge_Aircraft_Stand_Cost_per_Minute'];
-
-      const standTime =
-        this.model.times[timeline.airClass][isAway ? 'awayTime' : 'jbTime'];
-      const standCost = standRate * standTime;
-
-      const taxiingRate = this.model.rates['Aircraft_Taxiing_Cost_per_Minute'];
-      const taxiingTime = +stand['taxiingTime'];
-      const taxiingCost = taxiingRate * taxiingTime;
-
-      const totalCost = busCost + taxiingCost + standCost;
-
+      const totalCost = this.calculateCostPerTimelineStand(
+        timeline,
+        timeline.standId
+      );
       prev = prev + totalCost;
       return prev;
     }, 0);
     this.calcCost = calcCost;
   };
-
 }
 
 function calcTime(stand, terminal) {

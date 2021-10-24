@@ -3,6 +3,6 @@ import moment from 'moment';
 
 export default class EmtDatetimeFormatStartComponent extends Component {
   get formatedDate() {
-    return moment(this.args.record.start).format('DD HH:MM');
+    return moment(this.args.record.start).format('DD HH:mm');
   }
 }

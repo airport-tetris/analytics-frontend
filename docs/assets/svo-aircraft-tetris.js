@@ -1276,7 +1276,7 @@
 
   class EmtDatetimeFormatStartComponent extends _component.default {
     get formatedDate() {
-      return (0, _moment.default)(this.args.record.end).format('DD HH:MM');
+      return (0, _moment.default)(this.args.record.end).format();
     }
 
   }
@@ -1305,7 +1305,7 @@
 
   class EmtDatetimeFormatStartComponent extends _component.default {
     get formatedDate() {
-      return (0, _moment.default)(this.args.record.start).format('DD HH:MM');
+      return (0, _moment.default)(this.args.record.start).format('DD HH:mm');
     }
 
   }
@@ -1325,11 +1325,12 @@
   const __COLOCATED_TEMPLATE__ = Ember.HTMLBars.template(
   /*
     <p>Expanded row for record with id = <span class="id">{{this.record.time}}</span>.</p>
+  
   {{yield}}
   */
   {
-    "id": "BInArcHF",
-    "block": "{\"symbols\":[\"&default\"],\"statements\":[[10,\"p\"],[12],[2,\"Expanded row for record with id = \"],[10,\"span\"],[14,0,\"id\"],[12],[1,[32,0,[\"record\",\"time\"]]],[13],[2,\".\"],[13],[2,\"\\n\"],[18,1,null]],\"hasEval\":false,\"upvars\":[]}",
+    "id": "tnS67WfM",
+    "block": "{\"symbols\":[\"&default\"],\"statements\":[[10,\"p\"],[12],[2,\"Expanded row for record with id = \"],[10,\"span\"],[14,0,\"id\"],[12],[1,[32,0,[\"record\",\"time\"]]],[13],[2,\".\"],[13],[2,\"\\n\\n\"],[18,1,null]],\"hasEval\":false,\"upvars\":[]}",
     "moduleName": "svo-aircraft-tetris/components/emt/expanded-line.hbs"
   });
 
@@ -2291,9 +2292,9 @@
   });
   _exports.default = void 0;
 
-  var _dec, _dec2, _dec3, _dec4, _dec5, _dec6, _class, _descriptor, _descriptor2, _descriptor3, _descriptor4, _descriptor5, _descriptor6, _descriptor7;
+  var _dec, _dec2, _dec3, _dec4, _dec5, _dec6, _dec7, _dec8, _class, _descriptor, _descriptor2, _descriptor3, _descriptor4, _descriptor5, _descriptor6, _descriptor7;
 
-  let IndexController = (_dec = Ember.inject.service, _dec2 = Ember._action, _dec3 = Ember._action, _dec4 = Ember._action, _dec5 = Ember._action, _dec6 = Ember._action, (_class = class IndexController extends Ember.Controller {
+  let IndexController = (_dec = Ember.inject.service, _dec2 = Ember._action, _dec3 = Ember._action, _dec4 = Ember._action, _dec5 = Ember._action, _dec6 = Ember._action, _dec7 = Ember._action, _dec8 = Ember._action, (_class = class IndexController extends Ember.Controller {
     constructor(...args) {
       super(...args);
       (0, _initializerDefineProperty2.default)(this, "data", _descriptor, this);
@@ -2309,14 +2310,14 @@
         propertyName: 'start',
         sortFunction: function sortBefore(i1, i2) {
           return (0, _moment.default)(i1).diff(i2);
-        },
-        component: 'emt/datetime-format-start'
+        } // component: 'emt/datetime-format-start',
+
       }, {
         propertyName: 'end',
         sortFunction: function sortBefore(i1, i2) {
           return (0, _moment.default)(i1).diff(i2);
-        },
-        component: 'emt/datetime-format-start'
+        } // component: 'emt/datetime-format-start',
+
       }, {
         propertyName: 'duration'
       }, {
@@ -2473,6 +2474,18 @@
       }, 0);
     }
 
+    costsOptArray() {
+      const result = this.data.map(timeline => {
+        return {
+          index: timeline.index,
+          cost: this.model.optimalStands[timeline.index][0].Cost
+        };
+      }).sort((a, b) => {
+        return b.cost - a.cost;
+      }).map(i => i.index);
+      console.log(result);
+    }
+
     get optimalRatio() {
       return this.totalCost / this.totalOptCost;
     }
@@ -2540,36 +2553,56 @@
       }
     }
 
+    arrageTimelines() {
+      let processedLines = this.data.map(timeline => {
+        const isArrival = timeline.isArrival;
+        const isDomestic = timeline.flightType;
+      });
+      this.data = Ember.A(processedLines);
+    }
+
     toggleShowErrors() {
       this.showErrors = !this.showErrors;
     }
 
+    calculateTimesPerTimelineStand(timeline, standId) {
+      const stand = this.model.stands[standId];
+      const isAway = stand['jetbridgeType'] === 'N';
+      const busTime = calcTime(stand, timeline.terminalId);
+      const standTime = this.model.times[timeline.airClass][isAway ? 'awayTime' : 'jbTime'];
+      const taxiingTime = +stand['taxiingTime'];
+      return {
+        busTime,
+        standTime,
+        taxiingTime
+      };
+    }
+
+    calculateCostPerTimelineStand(timeline, standId) {
+      const stand = this.model.stands[standId];
+      const isAway = stand['jetbridgeType'] === 'N';
+      const busRate = +this.model.rates['Bus_Cost_per_Minute'];
+      const busTime = calcTime(stand, timeline.terminalId);
+      const busCount = Math.ceil(+timeline.pax / 80);
+      const busCost = isAway ? busCount * busTime * busRate : 0;
+      const standRate = isAway ? +this.model.rates['Away_Aircraft_Stand_Cost_per_Minute'] : +this.model.rates['JetBridge_Aircraft_Stand_Cost_per_Minute'];
+      const standTime = this.model.times[timeline.airClass][isAway ? 'awayTime' : 'jbTime'];
+      const standCost = standRate * standTime;
+      const taxiingRate = this.model.rates['Aircraft_Taxiing_Cost_per_Minute'];
+      const taxiingTime = +stand['taxiingTime'];
+      const taxiingCost = taxiingRate * taxiingTime;
+      const totalCost = busCost + taxiingCost + standCost;
+      return totalCost;
+    }
+
     calculateCosts() {
       const calcCost = this.data.reduce((prev, timeline) => {
-        const stand = this.model.stands[timeline.standId];
-        const isAway = stand['jetbridgeType'] === 'N';
-        const busRate = +this.model.rates['Bus_Cost_per_Minute'];
-        const busTime = calcTime(stand, timeline.terminalId);
-        const busCount = Math.ceil(+timeline.pax / 80);
-        const busCost = isAway ? busCount * busTime * busRate : 0;
-        const standRate = isAway ? +this.model.rates['Away_Aircraft_Stand_Cost_per_Minute'] : +this.model.rates['JetBridge_Aircraft_Stand_Cost_per_Minute'];
-        const standTime = this.model.times[timeline.airClass][isAway ? 'awayTime' : 'jbTime'];
-        const standCost = standRate * standTime;
-        const taxiingRate = this.model.rates['Aircraft_Taxiing_Cost_per_Minute'];
-        const taxiingTime = +stand['taxiingTime'];
-        const taxiingCost = taxiingRate * taxiingTime;
-        const totalCost = busCost + taxiingCost + standCost;
+        const totalCost = this.calculateCostPerTimelineStand(timeline, timeline.standId);
         prev = prev + totalCost;
         return prev;
       }, 0);
       this.calcCost = calcCost;
-    } //   Bus_Nums.append(math.ceil(TimeTable.flight_PAX[i] / 80))
-    //     Bus_Costs.append(
-    //         (TimeTable.JB[i] == 'Away') * TimeTable.Bus_Time[i] * Price_.loc['Bus_Cost_per_Minute'].Rate * Bus_Nums[i])
-    //     Parking_Costs.append(((np.isnan(TimeTable.Terminal[i]) == True) * Price_.loc['Away_Aircraft_Stand_Cost_per_Minute'].Rate + (np.isnan(TimeTable.Terminal[i]) != True) * Price_.loc['JetBridge_Aircraft_Stand_Cost_per_Minute'].Rate) * TimeTable.Handling_Time[i])
-    //     Taxing_Costs.append(TimeTable.Taxiing_Time[i] * Price_.loc['Aircraft_Taxiing_Cost_per_Minute'].Rate)
-    // Total_Сosts = [x + y + z for x, y, z in zip(Bus_Costs, Parking_Costs, Taxing_Costs)]
-
+    }
 
   }, (_descriptor = (0, _applyDecoratedDescriptor2.default)(_class.prototype, "data", [_trackedBuiltIns.tracked], {
     configurable: true,
@@ -2616,7 +2649,7 @@
     initializer: function () {
       return 0;
     }
-  }), (0, _applyDecoratedDescriptor2.default)(_class.prototype, "toggleShowOptions", [_dec2], Object.getOwnPropertyDescriptor(_class.prototype, "toggleShowOptions"), _class.prototype), (0, _applyDecoratedDescriptor2.default)(_class.prototype, "deleteTimetable", [_dec3], Object.getOwnPropertyDescriptor(_class.prototype, "deleteTimetable"), _class.prototype), (0, _applyDecoratedDescriptor2.default)(_class.prototype, "parseTimetable", [_dec4], Object.getOwnPropertyDescriptor(_class.prototype, "parseTimetable"), _class.prototype), (0, _applyDecoratedDescriptor2.default)(_class.prototype, "toggleShowErrors", [_dec5], Object.getOwnPropertyDescriptor(_class.prototype, "toggleShowErrors"), _class.prototype), (0, _applyDecoratedDescriptor2.default)(_class.prototype, "calculateCosts", [_dec6], Object.getOwnPropertyDescriptor(_class.prototype, "calculateCosts"), _class.prototype)), _class));
+  }), (0, _applyDecoratedDescriptor2.default)(_class.prototype, "costsOptArray", [_dec2], Object.getOwnPropertyDescriptor(_class.prototype, "costsOptArray"), _class.prototype), (0, _applyDecoratedDescriptor2.default)(_class.prototype, "toggleShowOptions", [_dec3], Object.getOwnPropertyDescriptor(_class.prototype, "toggleShowOptions"), _class.prototype), (0, _applyDecoratedDescriptor2.default)(_class.prototype, "deleteTimetable", [_dec4], Object.getOwnPropertyDescriptor(_class.prototype, "deleteTimetable"), _class.prototype), (0, _applyDecoratedDescriptor2.default)(_class.prototype, "parseTimetable", [_dec5], Object.getOwnPropertyDescriptor(_class.prototype, "parseTimetable"), _class.prototype), (0, _applyDecoratedDescriptor2.default)(_class.prototype, "arrageTimelines", [_dec6], Object.getOwnPropertyDescriptor(_class.prototype, "arrageTimelines"), _class.prototype), (0, _applyDecoratedDescriptor2.default)(_class.prototype, "toggleShowErrors", [_dec7], Object.getOwnPropertyDescriptor(_class.prototype, "toggleShowErrors"), _class.prototype), (0, _applyDecoratedDescriptor2.default)(_class.prototype, "calculateCosts", [_dec8], Object.getOwnPropertyDescriptor(_class.prototype, "calculateCosts"), _class.prototype)), _class));
   _exports.default = IndexController;
 
   function calcTime(stand, terminal) {
@@ -4431,7 +4464,7 @@
     }
 
     async model() {
-      const response = await (0, _fetch.default)('/S_private_3.json');
+      const response = await (0, _fetch.default)('S_private_4.json');
       const S = await response.json();
       Object.keys(S).forEach(lineKey => {
         const orderedCost = Object.keys(S[lineKey]).map(standKey => {
@@ -4441,19 +4474,19 @@
         }).slice(0, 20);
         S[lineKey] = orderedCost;
       });
-      const responseStands = await (0, _fetch.default)('/data/aircraft-stands.json');
+      const responseStands = await (0, _fetch.default)('aircraft-stands.json');
       let stands = await responseStands.json();
       stands = stands.reduce((prev, val) => {
         prev[val['id']] = val;
         return prev;
       }, {});
-      const responseRates = await (0, _fetch.default)('/data/handling-rates.json');
+      const responseRates = await (0, _fetch.default)('handling-rates.json');
       let rates = await responseRates.json();
       rates = rates.reduce((prev, val) => {
         prev[val.Name] = +val.Value;
         return prev;
       }, {});
-      const responseTimes = await (0, _fetch.default)('/data/handling-times.json');
+      const responseTimes = await (0, _fetch.default)('handling-times.json');
       let times = await responseTimes.json();
       times = times.reduce((prev, val) => {
         prev[val['Aircraft_Class']] = {
@@ -4631,8 +4664,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "6Qk1/Mm6",
-    "block": "{\"symbols\":[\"standU\",\"form\",\"incorrectStand\",\"intersectedLine\",\"form\"],\"statements\":[[1,[30,[36,7],[\"Index\"],null]],[2,\"\\n\"],[10,\"div\"],[14,0,\"container\"],[12],[2,\"\\n  \"],[10,\"div\"],[14,0,\"row\"],[12],[2,\"\\n    \"],[10,\"div\"],[14,0,\"col-8\"],[12],[2,\"\\n      \"],[10,\"h3\"],[12],[2,\"\\n        Timetables\\n      \"],[13],[2,\"\\n      \"],[8,\"bs-form\",[],[[\"@formLayout\",\"@model\",\"@onSubmit\"],[\"vertical\",[32,0],[32,0,[\"parseTimetable\"]]]],[[\"default\"],[{\"statements\":[[2,\"\\n        \"],[11,\"button\"],[24,0,\"btn btn-outline-primary\"],[24,4,\"button\"],[4,[38,8],[\"click\",[32,0,[\"deleteTimetable\"]]],null],[12],[2,\"\\n          Delete timetable models\\n        \"],[13],[2,\"\\n        \"],[11,\"button\"],[24,0,\"btn btn-outline-primary\"],[24,4,\"button\"],[4,[38,8],[\"click\",[32,0,[\"calculateCosts\"]]],null],[12],[2,\"\\n          Calculate Costs \"],[1,[32,0,[\"calcCost\"]]],[2,\"\\n        \"],[13],[2,\"\\n        \"],[8,[32,5,[\"element\"]],[[24,\"rows\",\"10\"]],[[\"@controlType\",\"@label\",\"@property\"],[\"textarea\",\"Textarea\",\"timetableCSV\"]],null],[2,\"\\n        \"],[8,[32,5,[\"submitButton\"]],[],[[],[]],[[\"default\"],[{\"statements\":[[2,\"\\n          Parse timetable CSV\\n        \"]],\"parameters\":[]}]]],[2,\"\\n      \"]],\"parameters\":[5]}]]],[2,\"\\n      \"],[10,\"div\"],[14,0,\"row\"],[12],[2,\"\\n        \"],[10,\"div\"],[14,0,\"col-6\"],[12],[2,\"\\n          Number of errors\\n          \"],[1,[32,0,[\"incorrectData\",\"length\"]]],[2,\"\\n        \"],[13],[2,\"\\n        \"],[10,\"div\"],[14,0,\"col-6\"],[12],[2,\"\\n          \"],[11,\"button\"],[24,0,\"btn btn-outline-primary\"],[4,[38,8],[\"click\",[32,0,[\"toggleShowErrors\"]]],null],[12],[2,\"\\n            Show/hide error details\\n          \"],[13],[2,\"\\n        \"],[13],[2,\"\\n\"],[6,[37,9],[[32,0,[\"showErrors\"]]],null,[[\"default\"],[{\"statements\":[[6,[37,2],[[30,[36,1],[[30,[36,1],[[30,[36,6],[200,[32,0,[\"incorrectData\"]]],null]],null]],null]],null,[[\"default\"],[{\"statements\":[[2,\"            \"],[10,\"div\"],[14,0,\"col-3\"],[12],[2,\"\\n              \"],[1,[32,3,[\"standId\"]]],[2,\"\\n            \"],[13],[2,\"\\n            \"],[10,\"div\"],[14,0,\"col-4\"],[12],[2,\"\\n\"],[6,[37,2],[[30,[36,1],[[30,[36,1],[[30,[36,0],[\"start\",[32,3,[\"lines\"]]],null]],null]],null]],null,[[\"default\"],[{\"statements\":[[2,\"                \"],[10,\"div\"],[14,0,\"row\"],[12],[2,\"\\n                  \"],[10,\"div\"],[14,0,\"col-6\"],[12],[2,\"\\n                    \"],[1,[32,4,[\"start\"]]],[2,\"\\n                  \"],[13],[2,\"\\n                  \"],[10,\"div\"],[14,0,\"col-6\"],[12],[2,\"\\n                    \"],[1,[32,4,[\"end\"]]],[2,\"\\n                  \"],[13],[2,\"\\n                \"],[13],[2,\"\\n\"]],\"parameters\":[4]}]]],[2,\"            \"],[13],[2,\"\\n            \"],[10,\"div\"],[14,0,\"col-5\"],[12],[2,\"\\n              \"],[8,\"d3/timetable-chart\",[],[[\"@data\",\"@width\",\"@chartOptions\",\"@aspectRatio\"],[[32,3,[\"lines\"]],260,[30,[36,5],null,[[\"minY\",\"maxY\",\"minX\",\"maxX\"],[\"\",\"\",[30,[36,3],[[30,[36,3],[[30,[36,3],[[32,3],\"lines\"],null],0],null],\"start\"],null],[30,[36,3],[[30,[36,3],[[30,[36,4],[[30,[36,3],[[32,3],\"lines\"],null]],null],0],null],\"end\"],null]]]],0.6]],null],[2,\"\\n            \"],[13],[2,\"\\n\"]],\"parameters\":[3]}]]]],\"parameters\":[]}]]],[2,\"      \"],[13],[2,\"\\n      \"],[11,\"button\"],[24,0,\"btn btn-outline-primary\"],[4,[38,8],[\"click\",[32,0,[\"toggleShowOptions\"]]],null],[12],[2,\"\\n        Show/hide chart options\\n      \"],[13],[2,\"\\n\"],[6,[37,9],[[32,0,[\"showChartOptions\"]]],null,[[\"default\"],[{\"statements\":[[2,\"        \"],[10,\"h3\"],[12],[2,\"\\n          Chart options\\n        \"],[13],[2,\"\\n        \"],[8,\"bs-form\",[],[[\"@formLayout\",\"@model\"],[\"vertical\",[32,0,[\"chartOptions\"]]]],[[\"default\"],[{\"statements\":[[2,\"\\n          \"],[8,[32,2,[\"element\"]],[],[[\"@controlType\",\"@label\",\"@property\"],[\"input\",\"min Y\",\"minY\"]],null],[2,\"\\n          \"],[8,[32,2,[\"element\"]],[],[[\"@controlType\",\"@label\",\"@property\"],[\"input\",\"max Y\",\"maxY\"]],null],[2,\"\\n          \"],[8,[32,2,[\"element\"]],[],[[\"@controlType\",\"@label\",\"@property\"],[\"input\",\"min X\",\"minX\"]],null],[2,\"\\n          \"],[8,[32,2,[\"element\"]],[],[[\"@controlType\",\"@label\",\"@property\"],[\"input\",\"max X\",\"maxX\"]],null],[2,\"\\n        \"]],\"parameters\":[2]}]]],[2,\"\\n\"]],\"parameters\":[]}]]],[2,\"    \"],[13],[2,\"\\n    \"],[10,\"div\"],[14,0,\"col-4\"],[12],[2,\"\\n      \"],[10,\"div\"],[14,0,\"row\"],[12],[2,\"\\n        \"],[10,\"h2\"],[12],[2,\"\\n          Statistics of the arrangement\\n        \"],[13],[2,\"\\n        \"],[10,\"div\"],[14,0,\"col-12\"],[12],[2,\"\\n          \"],[10,\"p\"],[12],[2,\"\\n            Length of timetable:\\n            \"],[1,[32,0,[\"data\",\"length\"]]],[2,\"\\n          \"],[13],[2,\"\\n          \"],[10,\"p\"],[12],[2,\"\\n            Total cost\\n            \"],[1,[32,0,[\"totalCost\"]]],[2,\"\\n          \"],[13],[2,\"\\n          \"],[10,\"p\"],[12],[2,\"\\n            Total Optimal cost / via stands\\n            \"],[1,[32,0,[\"totalOptCost\"]]],[2,\"\\n            /\\n            \"],[1,[32,0,[\"totalOptCostsViaStands\"]]],[2,\"\\n          \"],[13],[2,\"\\n          \"],[10,\"p\"],[12],[2,\"\\n            Total utilisation\\n            \"],[1,[32,0,[\"totalStandsUtilization\"]]],[2,\"\\n          \"],[13],[2,\"\\n          \"],[10,\"p\"],[12],[2,\"\\n            Ratio\\n            \"],[1,[32,0,[\"optimalRatio\"]]],[2,\"\\n          \"],[13],[2,\"\\n          Stands Utilisations:\\n\"],[6,[37,2],[[30,[36,1],[[30,[36,1],[[30,[36,6],[10,[32,0,[\"standsUtilization\"]]],null]],null]],null]],null,[[\"default\"],[{\"statements\":[[2,\"            \"],[10,\"div\"],[12],[2,\"\\n              \"],[1,[32,1,[\"stand\"]]],[2,\"\\n              \"],[1,[32,1,[\"utilisation\"]]],[2,\"\\n            \"],[13],[2,\"\\n\"]],\"parameters\":[1]}]]],[2,\"        \"],[13],[2,\"\\n      \"],[13],[2,\"\\n    \"],[13],[2,\"\\n    \"],[10,\"div\"],[14,0,\"col-12\"],[12],[2,\"\\n      \"],[8,\"d3/timetable-chart\",[],[[\"@data\",\"@stands\",\"@width\",\"@chartOptions\",\"@aspectRatio\"],[[32,0,[\"data\"]],[32,0,[\"stands\"]],960,[30,[36,5],null,[[\"minY\",\"maxY\",\"minX\",\"maxX\"],[[32,0,[\"chartOptions\",\"minY\"]],[32,0,[\"chartOptions\",\"maxY\"]],[32,0,[\"chartOptions\",\"minX\"]],[32,0,[\"chartOptions\",\"maxX\"]]]]],0.6]],null],[2,\"\\n    \"],[13],[2,\"\\n    \"],[10,\"div\"],[14,0,\"col-12\"],[12],[2,\"\\n      \"],[8,\"d3/stand-utilisation\",[],[[\"@data\",\"@width\",\"@aspectRatio\"],[[32,0,[\"standsUtilization\"]],960,0.3]],null],[2,\"\\n    \"],[13],[2,\"\\n    \"],[10,\"div\"],[14,0,\"col-12\"],[12],[2,\"\\n      \"],[8,\"models-table\",[],[[\"@data\",\"@columns\",\"@showComponentFooter\",\"@showColumnsDropdown\",\"@useFilteringByColumns\",\"@showGlobalFilter\",\"@doFilteringByHiddenColumns\",\"@useNumericPagination\",\"@filteringIgnoreCase\",\"@multipleColumnsSorting\",\"@showCurrentPageNumberSelect\",\"@collapseNumPaginationForPagesCount\",\"@expandedRowComponent\",\"@showPageSize\",\"@pageSize\"],[[32,0,[\"data\"]],[32,0,[\"columns\"]],[32,0,[\"showComponentFooter\"]],[32,0,[\"showColumnsDropdown\"]],[32,0,[\"useFilteringByColumns\"]],[32,0,[\"showGlobalFilter\"]],[32,0,[\"doFilteringByHiddenColumns\"]],[32,0,[\"useNumericPagination\"]],[32,0,[\"filteringIgnoreCase\"]],[32,0,[\"multipleColumnsSorting\"]],[32,0,[\"showCurrentPageNumberSelect\"]],[32,0,[\"collapseNumPaginationForPagesCount\"]],[30,[36,10],[\"emt/expanded-line\"],null],[32,0,[\"showPageSize\"]],50]],null],[2,\"\\n    \"],[13],[2,\"\\n  \"],[13],[2,\"\\n\"],[13],[2,\"\\n\"],[1,[30,[36,10],[[30,[36,11],null,null]],null]]],\"hasEval\":false,\"upvars\":[\"sort-by\",\"-track-array\",\"each\",\"get\",\"reverse\",\"hash\",\"take\",\"page-title\",\"on\",\"if\",\"component\",\"-outlet\"]}",
+    "id": "ukZD2IvI",
+    "block": "{\"symbols\":[\"standU\",\"form\",\"incorrectStand\",\"intersectedLine\",\"form\"],\"statements\":[[1,[30,[36,7],[\"Index\"],null]],[2,\"\\n\"],[10,\"div\"],[14,0,\"container\"],[12],[2,\"\\n  \"],[10,\"div\"],[14,0,\"row\"],[12],[2,\"\\n    \"],[10,\"div\"],[14,0,\"col-8\"],[12],[2,\"\\n      \"],[10,\"h3\"],[12],[2,\"\\n        Timetables\\n      \"],[13],[2,\"\\n      \"],[8,\"bs-form\",[],[[\"@formLayout\",\"@model\",\"@onSubmit\"],[\"vertical\",[32,0],[32,0,[\"parseTimetable\"]]]],[[\"default\"],[{\"statements\":[[2,\"\\n        \"],[11,\"button\"],[24,0,\"btn btn-outline-primary\"],[24,4,\"button\"],[4,[38,8],[\"click\",[32,0,[\"costsOptArray\"]]],null],[12],[2,\"\\n          Calculate MiniMax rearrangement\\n        \"],[13],[2,\"\\n        \"],[11,\"button\"],[24,0,\"btn btn-outline-primary\"],[24,4,\"button\"],[4,[38,8],[\"click\",[32,0,[\"calculateCosts\"]]],null],[12],[2,\"\\n          Calculate Costs \"],[1,[32,0,[\"calcCost\"]]],[2,\"\\n        \"],[13],[2,\"\\n        \"],[8,[32,5,[\"element\"]],[[24,\"rows\",\"10\"]],[[\"@controlType\",\"@label\",\"@property\"],[\"textarea\",\"Textarea\",\"timetableCSV\"]],null],[2,\"\\n        \"],[8,[32,5,[\"submitButton\"]],[],[[],[]],[[\"default\"],[{\"statements\":[[2,\"\\n          Parse timetable CSV\\n        \"]],\"parameters\":[]}]]],[2,\"\\n      \"]],\"parameters\":[5]}]]],[2,\"\\n      \"],[10,\"div\"],[14,0,\"row\"],[12],[2,\"\\n        \"],[10,\"div\"],[14,0,\"col-6\"],[12],[2,\"\\n          Number of errors\\n          \"],[1,[32,0,[\"incorrectData\",\"length\"]]],[2,\"\\n        \"],[13],[2,\"\\n        \"],[10,\"div\"],[14,0,\"col-6\"],[12],[2,\"\\n          \"],[11,\"button\"],[24,0,\"btn btn-outline-primary\"],[4,[38,8],[\"click\",[32,0,[\"toggleShowErrors\"]]],null],[12],[2,\"\\n            Show/hide error details\\n          \"],[13],[2,\"\\n        \"],[13],[2,\"\\n\"],[6,[37,9],[[32,0,[\"showErrors\"]]],null,[[\"default\"],[{\"statements\":[[6,[37,2],[[30,[36,1],[[30,[36,1],[[30,[36,6],[200,[32,0,[\"incorrectData\"]]],null]],null]],null]],null,[[\"default\"],[{\"statements\":[[2,\"            \"],[10,\"div\"],[14,0,\"col-3\"],[12],[2,\"\\n              \"],[1,[32,3,[\"standId\"]]],[2,\"\\n            \"],[13],[2,\"\\n            \"],[10,\"div\"],[14,0,\"col-4\"],[12],[2,\"\\n\"],[6,[37,2],[[30,[36,1],[[30,[36,1],[[30,[36,0],[\"start\",[32,3,[\"lines\"]]],null]],null]],null]],null,[[\"default\"],[{\"statements\":[[2,\"                \"],[10,\"div\"],[14,0,\"row\"],[12],[2,\"\\n                  \"],[10,\"div\"],[14,0,\"col-6\"],[12],[2,\"\\n                    \"],[1,[32,4,[\"start\"]]],[2,\"\\n                  \"],[13],[2,\"\\n                  \"],[10,\"div\"],[14,0,\"col-6\"],[12],[2,\"\\n                    \"],[1,[32,4,[\"end\"]]],[2,\"\\n                  \"],[13],[2,\"\\n                \"],[13],[2,\"\\n\"]],\"parameters\":[4]}]]],[2,\"            \"],[13],[2,\"\\n            \"],[10,\"div\"],[14,0,\"col-5\"],[12],[2,\"\\n              \"],[8,\"d3/timetable-chart\",[],[[\"@data\",\"@width\",\"@chartOptions\",\"@aspectRatio\"],[[32,3,[\"lines\"]],260,[30,[36,5],null,[[\"minY\",\"maxY\",\"minX\",\"maxX\"],[\"\",\"\",[30,[36,3],[[30,[36,3],[[30,[36,3],[[32,3],\"lines\"],null],0],null],\"start\"],null],[30,[36,3],[[30,[36,3],[[30,[36,4],[[30,[36,3],[[32,3],\"lines\"],null]],null],0],null],\"end\"],null]]]],0.6]],null],[2,\"\\n            \"],[13],[2,\"\\n\"]],\"parameters\":[3]}]]]],\"parameters\":[]}]]],[2,\"      \"],[13],[2,\"\\n      \"],[11,\"button\"],[24,0,\"btn btn-outline-primary\"],[4,[38,8],[\"click\",[32,0,[\"toggleShowOptions\"]]],null],[12],[2,\"\\n        Show/hide chart options\\n      \"],[13],[2,\"\\n\"],[6,[37,9],[[32,0,[\"showChartOptions\"]]],null,[[\"default\"],[{\"statements\":[[2,\"        \"],[10,\"h3\"],[12],[2,\"\\n          Chart options\\n        \"],[13],[2,\"\\n        \"],[8,\"bs-form\",[],[[\"@formLayout\",\"@model\"],[\"vertical\",[32,0,[\"chartOptions\"]]]],[[\"default\"],[{\"statements\":[[2,\"\\n          \"],[8,[32,2,[\"element\"]],[],[[\"@controlType\",\"@label\",\"@property\"],[\"input\",\"min Y\",\"minY\"]],null],[2,\"\\n          \"],[8,[32,2,[\"element\"]],[],[[\"@controlType\",\"@label\",\"@property\"],[\"input\",\"max Y\",\"maxY\"]],null],[2,\"\\n          \"],[8,[32,2,[\"element\"]],[],[[\"@controlType\",\"@label\",\"@property\"],[\"input\",\"min X\",\"minX\"]],null],[2,\"\\n          \"],[8,[32,2,[\"element\"]],[],[[\"@controlType\",\"@label\",\"@property\"],[\"input\",\"max X\",\"maxX\"]],null],[2,\"\\n        \"]],\"parameters\":[2]}]]],[2,\"\\n\"]],\"parameters\":[]}]]],[2,\"    \"],[13],[2,\"\\n    \"],[10,\"div\"],[14,0,\"col-4\"],[12],[2,\"\\n      \"],[10,\"div\"],[14,0,\"row\"],[12],[2,\"\\n        \"],[10,\"h2\"],[12],[2,\"\\n          Statistics of the arrangement\\n        \"],[13],[2,\"\\n        \"],[10,\"div\"],[14,0,\"col-12\"],[12],[2,\"\\n          \"],[10,\"p\"],[12],[2,\"\\n            Length of timetable:\\n            \"],[1,[32,0,[\"data\",\"length\"]]],[2,\"\\n          \"],[13],[2,\"\\n          \"],[10,\"p\"],[12],[2,\"\\n            Total cost\\n            \"],[1,[32,0,[\"totalCost\"]]],[2,\"\\n          \"],[13],[2,\"\\n          \"],[10,\"p\"],[12],[2,\"\\n            Total Optimal cost / via stands\\n            \"],[1,[32,0,[\"totalOptCost\"]]],[2,\"\\n            /\\n            \"],[1,[32,0,[\"totalOptCostsViaStands\"]]],[2,\"\\n          \"],[13],[2,\"\\n          \"],[10,\"p\"],[12],[2,\"\\n            Total utilisation\\n            \"],[1,[32,0,[\"totalStandsUtilization\"]]],[2,\"\\n          \"],[13],[2,\"\\n          \"],[10,\"p\"],[12],[2,\"\\n            Ratio\\n            \"],[1,[32,0,[\"optimalRatio\"]]],[2,\"\\n          \"],[13],[2,\"\\n          Stands Utilisations:\\n\"],[6,[37,2],[[30,[36,1],[[30,[36,1],[[30,[36,6],[10,[32,0,[\"standsUtilization\"]]],null]],null]],null]],null,[[\"default\"],[{\"statements\":[[2,\"            \"],[10,\"div\"],[12],[2,\"\\n              \"],[1,[32,1,[\"stand\"]]],[2,\"\\n              \"],[1,[32,1,[\"utilisation\"]]],[2,\"\\n            \"],[13],[2,\"\\n\"]],\"parameters\":[1]}]]],[2,\"        \"],[13],[2,\"\\n      \"],[13],[2,\"\\n    \"],[13],[2,\"\\n    \"],[10,\"div\"],[14,0,\"col-12\"],[12],[2,\"\\n      \"],[8,\"d3/timetable-chart\",[],[[\"@data\",\"@stands\",\"@width\",\"@chartOptions\",\"@aspectRatio\"],[[32,0,[\"data\"]],[32,0,[\"stands\"]],960,[30,[36,5],null,[[\"minY\",\"maxY\",\"minX\",\"maxX\"],[[32,0,[\"chartOptions\",\"minY\"]],[32,0,[\"chartOptions\",\"maxY\"]],[32,0,[\"chartOptions\",\"minX\"]],[32,0,[\"chartOptions\",\"maxX\"]]]]],0.6]],null],[2,\"\\n    \"],[13],[2,\"\\n    \"],[10,\"div\"],[14,0,\"col-12\"],[12],[2,\"\\n      \"],[8,\"d3/stand-utilisation\",[],[[\"@data\",\"@width\",\"@aspectRatio\"],[[32,0,[\"standsUtilization\"]],960,0.3]],null],[2,\"\\n    \"],[13],[2,\"\\n    \"],[10,\"div\"],[14,0,\"col-12\"],[12],[2,\"\\n      \"],[8,\"models-table\",[],[[\"@data\",\"@columns\",\"@showComponentFooter\",\"@showColumnsDropdown\",\"@useFilteringByColumns\",\"@showGlobalFilter\",\"@doFilteringByHiddenColumns\",\"@useNumericPagination\",\"@filteringIgnoreCase\",\"@multipleColumnsSorting\",\"@showCurrentPageNumberSelect\",\"@collapseNumPaginationForPagesCount\",\"@expandedRowComponent\",\"@showPageSize\",\"@pageSize\"],[[32,0,[\"data\"]],[32,0,[\"columns\"]],[32,0,[\"showComponentFooter\"]],[32,0,[\"showColumnsDropdown\"]],[32,0,[\"useFilteringByColumns\"]],[32,0,[\"showGlobalFilter\"]],[32,0,[\"doFilteringByHiddenColumns\"]],[32,0,[\"useNumericPagination\"]],[32,0,[\"filteringIgnoreCase\"]],[32,0,[\"multipleColumnsSorting\"]],[32,0,[\"showCurrentPageNumberSelect\"]],[32,0,[\"collapseNumPaginationForPagesCount\"]],[30,[36,10],[\"emt/expanded-line\"],null],[32,0,[\"showPageSize\"]],50]],null],[2,\"\\n    \"],[13],[2,\"\\n  \"],[13],[2,\"\\n\"],[13],[2,\"\\n\"],[1,[30,[36,10],[[30,[36,11],null,null]],null]]],\"hasEval\":false,\"upvars\":[\"sort-by\",\"-track-array\",\"each\",\"get\",\"reverse\",\"hash\",\"take\",\"page-title\",\"on\",\"if\",\"component\",\"-outlet\"]}",
     "moduleName": "svo-aircraft-tetris/templates/index.hbs"
   });
 
@@ -4817,7 +4850,7 @@ catch(err) {
 
 ;
           if (!runningTests) {
-            require("svo-aircraft-tetris/app")["default"].create({"name":"svo-aircraft-tetris","version":"0.0.0+4fdf5808"});
+            require("svo-aircraft-tetris/app")["default"].create({"name":"svo-aircraft-tetris","version":"0.0.0+1f2941fd"});
           }
         
 //# sourceMappingURL=svo-aircraft-tetris.map
